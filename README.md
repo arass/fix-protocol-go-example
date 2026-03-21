@@ -54,8 +54,8 @@ You should see output like this:
 
 ```
 System: Starting FIX Client...
-Session Created: FIX.4.4:BIYACAP_UAT->RAPTOR_UAT
-Connection: Logged On to FIX.4.4:BIYACAP_UAT->RAPTOR_UAT
+Session Created: FIX.4.4:MY_UAT->SERVER_UAT
+Connection: Logged On to FIX.4.4:MY_UAT->SERVER_UAT
 Action: Sending New Order Single (ID: ORD-167890000)...
 ...
 --- [Execution Report] ---
@@ -101,6 +101,13 @@ If you need to change the server details, edit `config.cfg`.
 ### Error: `MsgSeqNum too low`
 **Reason**: This means your `store/` folder is out of sync with the server (e.g., the server was reset but your local files weren't).
 **Fix**: Delete the `store/` folder and try again. This resets your sequence numbers.
+
+### Tip: Understanding Order Status
+**Always look at the ExecutionReport.**
+Check `ExecType` (Tag 150), not just the message type, to know the true status of your orders.
+*   `ExecType=0 (New)`: Order accepted.
+*   `ExecType=8 (Rejected)`: Order failed.
+*   `ExecType=F (Trade)`: Trade executed.
 
 ## detailed Code Explanation
 
