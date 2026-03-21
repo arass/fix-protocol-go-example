@@ -11,13 +11,16 @@ This is a simple trading application that connects to a server using the **FIX P
 
 ## Project Structure
 
-Here is what each file is for:
+We follow the standard Go project layout:
 
-*   **`main.go`**: The **brain** of the application. It contains all the logic for connecting, sending orders, and handling messages. Read the comments in this file to understand how it works!
-*   **`config.cfg`**: The **settings** file. It tells the app *where* to connect (IP address, Port) and *who* we are (SenderCompID).
-*   **`go.mod` / `go.sum`**: These files manage the **dependencies** (external libraries) we use. We use `quickfixgo` to handle the complex FIX protocol details.
-*   **`log/`**: (Created automatically) This folder will contain detailed logs of every message sent and received.
-*   **`store/`**: (Created automatically) This folder saves "sequence numbers" so if we restart, we continue where we left off.
+*   **`cmd/thisgofix/`**: Contains the main entry point (`main.go`).
+*   **`internal/fix/`**: Contains the core application logic.
+    *   `application.go`: Handles FIX events (`OnLogon`, `FromApp`).
+    *   `constants.go`: Defines FIX tags and message types.
+    *   `application_test.go`: Unit tests for the application logic.
+    *   `utils_test.go`: Unit tests for helper functions.
+*   **`config.cfg`**: The FIX session configuration.
+*   **`go.mod` / `go.sum`**: Dependency management.
 
 ## Prerequisites
 
@@ -42,7 +45,7 @@ This will download the `quickfixgo` library and fix the `go.sum` file.
 Run the application with:
 
 ```bash
-go run main.go
+go run cmd/thisgofix/main.go
 ```
 
 ### Step 3: Watch the Output
@@ -67,6 +70,14 @@ Remaining Qty:   100
 ### Step 4: Stop the App
 
 Press **Ctrl+C** in your terminal to stop the application gracefully.
+
+## How to Run Tests
+
+To run the unit tests we added:
+
+```bash
+go test ./internal/fix
+```
 
 ## Configuration (`config.cfg`)
 
@@ -93,4 +104,4 @@ If you need to change the server details, edit `config.cfg`.
 
 ## detailed Code Explanation
 
-The `main.go` file is heavily commented. Open it in your editor and read through the `FIXApplication` struct methods (`OnLogon`, `FromApp`, etc.) to see exactly how we handle events.
+The `internal/fix/application.go` file contains the core logic. Open it in your editor and read through the `Application` struct methods (`OnLogon`, `FromApp`, etc.) to see exactly how we handle events.
