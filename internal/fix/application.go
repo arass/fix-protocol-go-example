@@ -79,6 +79,9 @@ func (a *Application) FromAdmin(msg *quickfix.Message, sessionID quickfix.Sessio
 	case MsgTypeReject:
 		// Tag 35 = 3: The server is rejecting a session-level message (like an unauthorized order)
 		printReject(msg)
+	case MsgTypeHeartBeat:
+		// Tag 35 = 0: Heartbeat. We do nothing and don't log it to avoid clutter.
+		return nil
 	default:
 		log.Printf("Admin: Received Admin Message: %s", msg.String())
 	}
@@ -247,6 +250,8 @@ func translateMsgType(msgType string) string {
 	switch msgType {
 	case MsgTypeLogon:
 		return "Logon"
+	case MsgTypeHeartBeat:
+		return "Heartbeat"
 	case MsgTypeReject:
 		return "Session Reject"
 	case MsgTypeExecutionReport:

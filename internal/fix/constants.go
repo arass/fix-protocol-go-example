@@ -37,6 +37,7 @@ const (
 	MsgTypeOrderCancelReject  = "9" // Server rejected our request to cancel
 	MsgTypeNewOrderSingle     = "D" // We are sending a new order
 	MsgTypeOrderCancelRequest = "F" // Request to cancel an existing order
+	MsgTypeHeartBeat          = "0" // Request to cancel an existing order
 
 	// Field Values
 	SideBuy       = "1" // Value '1' means Buy
