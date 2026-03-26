@@ -245,6 +245,14 @@ func translateOrdStatus(val string) string {
 // translateMsgType converts FIX MsgType codes to human-readable names
 func translateMsgType(msgType string) string {
 	switch msgType {
+	case MsgTypeLogon:
+		return "Logon"
+	case MsgTypeReject:
+		return "Session Reject"
+	case MsgTypeExecutionReport:
+		return "Execution Report"
+	case MsgTypeOrderCancelReject:
+		return "Order Cancel Reject"
 	case MsgTypeNewOrderSingle:
 		return "New Order Single"
 	case MsgTypeOrderCancelRequest:
