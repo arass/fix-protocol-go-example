@@ -68,7 +68,20 @@ func (a *Application) ToApp(msg *quickfix.Message, sessionID quickfix.SessionID)
 
 // FromAdmin is called when we receive an administrative message (Heartbeat, Logon confirmation).
 func (a *Application) FromAdmin(msg *quickfix.Message, sessionID quickfix.SessionID) quickfix.MessageRejectError {
-	log.Printf("Admin: Received Admin Message: %s", msg.String())
+	// 1. Get the Message Type to decide how to handle it
+	msgType, err := msg.Header.GetString(TagMsgType)
+	if err != nil {
+		return nil
+	}
+
+	// 2. Switch based on the message type
+	switch msgType {
+	case MsgTypeReject:
+		// Tag 35 = 3: The server is rejecting a session-level message (like an unauthorized order)
+		printReject(msg)
+	default:
+		log.Printf("Admin: Received Admin Message: %s", msg.String())
+	}
 	return nil
 }
 
@@ -135,6 +148,20 @@ func printOrderCancelReject(msg *quickfix.Message) {
 	fmt.Printf("Orig Client ID:  %s\n", origClOrdID)
 	fmt.Printf("Order Status:    %s\n", translateOrdStatus(ordStatus))
 	fmt.Printf("-----------------------------\n")
+}
+
+// printReject parses and prints the details of a Session Level Reject (MsgType 3).
+func printReject(msg *quickfix.Message) {
+	refSeqNum, _ := msg.Body.GetString(TagRefSeqNum)
+	refMsgType, _ := msg.Body.GetString(TagRefMsgType)
+	text, _ := msg.Body.GetString(TagText)
+
+	// This happens when the server rejects a message before it even reaches the matching engine
+	fmt.Printf("\n--- [Session Level Reject (3)] ---\n")
+	fmt.Printf("Reason:          %s\n", text)
+	fmt.Printf("Rejected Msg:    %s (MsgType: %s)\n", translateMsgType(refMsgType), refMsgType)
+	fmt.Printf("Ref Seq Number:  %s\n", refSeqNum)
+	fmt.Printf("----------------------------------\n")
 }
 
 // sendOrder constructs and sends a "New Order Single" message to the server.
@@ -212,5 +239,17 @@ func translateOrdStatus(val string) string {
 		return "Rejected"
 	default:
 		return val
+	}
+}
+
+// translateMsgType converts FIX MsgType codes to human-readable names
+func translateMsgType(msgType string) string {
+	switch msgType {
+	case MsgTypeNewOrderSingle:
+		return "New Order Single"
+	case MsgTypeOrderCancelRequest:
+		return "Order Cancel Request"
+	default:
+		return fmt.Sprintf("Unknown Type (%s)", msgType)
 	}
 }

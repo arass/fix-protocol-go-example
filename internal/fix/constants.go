@@ -27,12 +27,16 @@ const (
 	TagAvgPx        quickfix.Tag = 6   // Average price of fills
 	TagText         quickfix.Tag = 58  // Text description / reason
 	TagOrigClOrdID  quickfix.Tag = 41  // Original Order ID (for cancels)
+	TagRefSeqNum    quickfix.Tag = 45  // Reference message sequence number (for Rejects)
+	TagRefMsgType   quickfix.Tag = 372 // Reference message type (for Rejects)
 
 	// Message Types (Values for Tag 35)
-	MsgTypeLogon             = "A" // Connection established
-	MsgTypeExecutionReport   = "8" // Server telling us about an order change
-	MsgTypeOrderCancelReject = "9" // Server rejected our request to cancel
-	MsgTypeNewOrderSingle    = "D" // We are sending a new order
+	MsgTypeLogon              = "A" // Connection established
+	MsgTypeReject             = "3" // Session-level reject
+	MsgTypeExecutionReport    = "8" // Server telling us about an order change
+	MsgTypeOrderCancelReject  = "9" // Server rejected our request to cancel
+	MsgTypeNewOrderSingle     = "D" // We are sending a new order
+	MsgTypeOrderCancelRequest = "F" // Request to cancel an existing order
 
 	// Field Values
 	SideBuy       = "1" // Value '1' means Buy
