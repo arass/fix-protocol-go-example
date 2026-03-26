@@ -21,6 +21,10 @@ go.work
 log/
 store/
 
+# Local configuration (Do not commit!)
+# Users should copy config.cfg.example to config.cfg
+config.cfg
+
 # IDE specific files
 .idea/
 .vscode/
