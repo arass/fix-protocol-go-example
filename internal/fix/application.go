@@ -178,6 +178,9 @@ func (a *Application) sendOrder() {
 
 	// 3. Set the Body fields (The details of the order)
 
+	// Account: The trading account ID (Optional but common)
+	msg.Body.SetField(TagAccount, quickfix.FIXString("FIX-TEST-ACCOUNT-1"))
+
 	// ClOrdID: A unique ID WE generate to track this order
 	clOrdID := fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
@@ -196,6 +199,9 @@ func (a *Application) sendOrder() {
 
 	// OrdType: Market (1) - execute immediately at best price
 	msg.Body.SetField(TagOrdType, quickfix.FIXString(OrdTypeMarket))
+
+	// TimeInForce: Day (0) - order expires at end of session
+	msg.Body.SetField(TagTimeInForce, quickfix.FIXString(TimeInForceDay))
 
 	// 4. Send the message to the session
 	log.Printf("Action: Sending New Order Single (ID: %s)...", clOrdID)

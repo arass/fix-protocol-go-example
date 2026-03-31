@@ -29,6 +29,8 @@ const (
 	TagOrigClOrdID  quickfix.Tag = 41  // Original Order ID (for cancels)
 	TagRefSeqNum    quickfix.Tag = 45  // Reference message sequence number (for Rejects)
 	TagRefMsgType   quickfix.Tag = 372 // Reference message type (for Rejects)
+	TagAccount      quickfix.Tag = 1   // Account ID (e.g., Trading Account)
+	TagTimeInForce  quickfix.Tag = 59  // How long the order stays active
 
 	// Message Types (Values for Tag 35)
 	MsgTypeLogon              = "A" // Connection established
@@ -37,11 +39,17 @@ const (
 	MsgTypeOrderCancelReject  = "9" // Server rejected our request to cancel
 	MsgTypeNewOrderSingle     = "D" // We are sending a new order
 	MsgTypeOrderCancelRequest = "F" // Request to cancel an existing order
-	MsgTypeHeartBeat          = "0" // Request to cancel an existing order
+	MsgTypeHeartBeat          = "0" // Heartbeat
 
 	// Field Values
 	SideBuy       = "1" // Value '1' means Buy
 	OrdTypeMarket = "1" // Value '1' means Market Order
+
+	// Time In Force Values (Tag 59)
+	TimeInForceDay = "0" // Active for the trading day
+	TimeInForceGTC = "1" // Good Till Cancelled
+	TimeInForceIOC = "3" // Immediate Or Cancel
+	TimeInForceFOK = "4" // Fill Or Kill
 
 	// Execution Types (Values for Tag 150) - What happened?
 	ExecTypeNew         = "0" // Order accepted
