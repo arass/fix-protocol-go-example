@@ -16,7 +16,8 @@ import (
 // FIXApplication is our custom struct that implements the quickfix.Application interface.
 // The FIX engine will call methods on this struct when events happen.
 type Application struct {
-	SessionID quickfix.SessionID // Stores the ID of the current connection
+	SessionID   quickfix.SessionID // Stores the ID of the current connection
+	LastClOrdID string             // Stores the ID of the last order sent (to allow cancelling it)
 }
 
 // NewApplication creates a new instance of our FIX application logic.
@@ -41,6 +42,10 @@ func (a *Application) OnLogon(sessionID quickfix.SessionID) {
 	go func() {
 		time.Sleep(1 * time.Second)
 		a.sendOrder()
+
+		// Wait 5 seconds and then try to cancel it
+		time.Sleep(5 * time.Second)
+		a.sendCancelOrder()
 	}()
 }
 
@@ -136,6 +141,9 @@ func (a *Application) sendOrder() {
 	clOrdID := fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
 
+	// Store the ID so we can cancel it later
+	a.LastClOrdID = clOrdID
+
 	// Symbol: What we want to trade
 	msg.Body.SetField(TagSymbol, quickfix.FIXString("AAPL"))
 
@@ -159,5 +167,52 @@ func (a *Application) sendOrder() {
 	err := quickfix.SendToTarget(msg, a.SessionID)
 	if err != nil {
 		log.Printf("Error: Failed to send order: %s", err)
+	}
+}
+
+// sendCancelOrder constructs and sends an "Order Cancel Request" message.
+func (a *Application) sendCancelOrder() {
+	if a.LastClOrdID == "" {
+		log.Printf("Action: No previous order to cancel.")
+		return
+	}
+
+	// 1. Create a new empty message
+	msg := quickfix.NewMessage()
+
+	// 2. Set the Header fields
+	//    MsgType 'F' tells the server this is an Order Cancel Request
+	msg.Header.SetField(TagMsgType, quickfix.FIXString(MsgTypeOrderCancelRequest))
+
+	// 3. Set the Body fields
+
+	// OrigClOrdID: The ID of the order we want to cancel (the one we stored earlier)
+	msg.Body.SetField(TagOrigClOrdID, quickfix.FIXString(a.LastClOrdID))
+
+	// ClOrdID: A NEW unique ID for the cancel request itself
+	cancelClOrdID := fmt.Sprintf("CAN-%d", time.Now().UnixNano())
+	msg.Body.SetField(TagClOrdID, quickfix.FIXString(cancelClOrdID))
+
+	// Account: Same account as the original order
+	account := os.Getenv("ACCOUNT_NUMBER")
+	if account == "" {
+		account = "FIX-TEST-ACCOUNT-1"
+	}
+	msg.Body.SetField(TagAccount, quickfix.FIXString(account))
+
+	// Symbol: Must match the original order
+	msg.Body.SetField(TagSymbol, quickfix.FIXString("AAPL"))
+
+	// Side: Must match the original order
+	msg.Body.SetField(TagSide, quickfix.FIXString(SideBuy))
+
+	// TransactTime: Current UTC timestamp
+	msg.Body.SetField(TagTransactTime, quickfix.FIXString(time.Now().Format("20060102-15:04:05.000")))
+
+	// 4. Send the message
+	log.Printf("Action: Sending Order Cancel Request (Target ID: %s, Cancel ID: %s)...", a.LastClOrdID, cancelClOrdID)
+	err := quickfix.SendToTarget(msg, a.SessionID)
+	if err != nil {
+		log.Printf("Error: Failed to send cancel request: %s", err)
 	}
 }
