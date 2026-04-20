@@ -3,6 +3,7 @@ package fix
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/quickfixgo/quickfix"
@@ -178,8 +179,12 @@ func (a *Application) sendOrder() {
 
 	// 3. Set the Body fields (The details of the order)
 
-	// Account: The trading account ID (Optional but common)
-	msg.Body.SetField(TagAccount, quickfix.FIXString("FIX-TEST-ACCOUNT-1"))
+	// Account: The trading account ID (Sourced from env or default)
+	account := os.Getenv("ACCOUNT_NUMBER")
+	if account == "" {
+		account = "FIX-TEST-ACCOUNT-1"
+	}
+	msg.Body.SetField(TagAccount, quickfix.FIXString(account))
 
 	// ClOrdID: A unique ID WE generate to track this order
 	clOrdID := fmt.Sprintf("ORD-%d", time.Now().UnixNano())
