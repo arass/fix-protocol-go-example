@@ -137,7 +137,7 @@ func (a *Application) sendOrder() {
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
 
 	// Symbol: What we want to trade
-	msg.Body.SetField(TagSymbol, quickfix.FIXString("EUR/USD"))
+	msg.Body.SetField(TagSymbol, quickfix.FIXString("AAPL"))
 
 	// Side: Buy (1)
 	msg.Body.SetField(TagSide, quickfix.FIXString(SideBuy))
