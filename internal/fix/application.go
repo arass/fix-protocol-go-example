@@ -17,7 +17,7 @@ import (
 // The FIX engine will call methods on this struct when events happen.
 type Application struct {
 	SessionID   quickfix.SessionID // Stores the ID of the current connection
-	LastClOrdID string             // Stores the ID of the last order sent (to allow cancelling it)
+	LastClOrdID string             // Stores the ID of the last order sent (to allow cancelling/replacing it)
 }
 
 // NewApplication creates a new instance of our FIX application logic.
@@ -43,7 +43,11 @@ func (a *Application) OnLogon(sessionID quickfix.SessionID) {
 		time.Sleep(1 * time.Second)
 		a.sendOrder()
 
-		// Wait 5 seconds and then try to cancel it
+		// Wait 5 seconds, then try to modify (replace) it
+		time.Sleep(5 * time.Second)
+		a.sendReplaceOrder()
+
+		// Wait another 5 seconds and then try to cancel it
 		time.Sleep(5 * time.Second)
 		a.sendCancelOrder()
 	}()
@@ -141,7 +145,7 @@ func (a *Application) sendOrder() {
 	clOrdID := fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
 
-	// Store the ID so we can cancel it later
+	// Store the ID so we can cancel/replace it later
 	a.LastClOrdID = clOrdID
 
 	// Symbol: What we want to trade
@@ -170,6 +174,63 @@ func (a *Application) sendOrder() {
 	}
 }
 
+// sendReplaceOrder constructs and sends an "Order Cancel/Replace Request" message.
+func (a *Application) sendReplaceOrder() {
+	if a.LastClOrdID == "" {
+		log.Printf("Action: No previous order to replace.")
+		return
+	}
+
+	// 1. Create a new empty message
+	msg := quickfix.NewMessage()
+
+	// 2. Set the Header fields
+	//    MsgType 'G' tells the server this is an Order Cancel/Replace Request
+	msg.Header.SetField(TagMsgType, quickfix.FIXString(MsgTypeOrderReplaceRequest))
+
+	// 3. Set the Body fields
+
+	// OrigClOrdID: The ID of the order we want to replace
+	msg.Body.SetField(TagOrigClOrdID, quickfix.FIXString(a.LastClOrdID))
+
+	// ClOrdID: A NEW unique ID for the replace request itself
+	replaceClOrdID := fmt.Sprintf("REPL-%d", time.Now().UnixNano())
+	msg.Body.SetField(TagClOrdID, quickfix.FIXString(replaceClOrdID))
+
+	// Account: Same account
+	account := os.Getenv("ACCOUNT_NUMBER")
+	if account == "" {
+		account = "FIX-TEST-ACCOUNT-1"
+	}
+	msg.Body.SetField(TagAccount, quickfix.FIXString(account))
+
+	// Symbol: Must match the original order
+	msg.Body.SetField(TagSymbol, quickfix.FIXString("AAPL"))
+
+	// Side: Must match the original order
+	msg.Body.SetField(TagSide, quickfix.FIXString(SideBuy))
+
+	// TransactTime: Current UTC timestamp
+	msg.Body.SetField(TagTransactTime, quickfix.FIXString(time.Now().Format("20060102-15:04:05.000")))
+
+	// MODIFICATIONS: Let's change it to a Limit Order for 200 units
+	msg.Body.SetField(TagOrderQty, quickfix.FIXString("200"))
+	msg.Body.SetField(TagOrdType, quickfix.FIXString(OrdTypeLimit))
+	msg.Body.SetField(TagPrice, quickfix.FIXString("150.50"))
+
+	// 4. Send the message
+	log.Printf("Action: Sending Order Replace Request (Target ID: %s, New ID: %s)...", a.LastClOrdID, replaceClOrdID)
+
+	// Crucial: Update our last ID to the new one, as subsequent actions (like cancel)
+	// must reference the NEWEST ClOrdID from the replace request.
+	a.LastClOrdID = replaceClOrdID
+
+	err := quickfix.SendToTarget(msg, a.SessionID)
+	if err != nil {
+		log.Printf("Error: Failed to send replace request: %s", err)
+	}
+}
+
 // sendCancelOrder constructs and sends an "Order Cancel Request" message.
 func (a *Application) sendCancelOrder() {
 	if a.LastClOrdID == "" {
@@ -186,14 +247,14 @@ func (a *Application) sendCancelOrder() {
 
 	// 3. Set the Body fields
 
-	// OrigClOrdID: The ID of the order we want to cancel (the one we stored earlier)
+	// OrigClOrdID: The ID of the order we want to cancel
 	msg.Body.SetField(TagOrigClOrdID, quickfix.FIXString(a.LastClOrdID))
 
 	// ClOrdID: A NEW unique ID for the cancel request itself
 	cancelClOrdID := fmt.Sprintf("CAN-%d", time.Now().UnixNano())
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(cancelClOrdID))
 
-	// Account: Same account as the original order
+	// Account: Same account
 	account := os.Getenv("ACCOUNT_NUMBER")
 	if account == "" {
 		account = "FIX-TEST-ACCOUNT-1"

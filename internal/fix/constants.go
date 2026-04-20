@@ -19,6 +19,7 @@ const (
 	TagTransactTime quickfix.Tag = 60  // Time the order was sent
 	TagOrderQty     quickfix.Tag = 38  // How many units to buy/sell
 	TagOrdType      quickfix.Tag = 40  // Market (1) or Limit (2)
+	TagPrice        quickfix.Tag = 44  // Limit price
 	TagOrderID      quickfix.Tag = 37  // Server's Order ID
 	TagExecType     quickfix.Tag = 150 // What happened to the order? (New, Filled, etc.)
 	TagOrdStatus    quickfix.Tag = 39  // Current status of the order
@@ -26,24 +27,26 @@ const (
 	TagLeavesQty    quickfix.Tag = 151 // Quantity remaining to be filled
 	TagAvgPx        quickfix.Tag = 6   // Average price of fills
 	TagText         quickfix.Tag = 58  // Text description / reason
-	TagOrigClOrdID  quickfix.Tag = 41  // Original Order ID (for cancels)
+	TagOrigClOrdID  quickfix.Tag = 41  // Original Order ID (for cancels/modifies)
 	TagRefSeqNum    quickfix.Tag = 45  // Reference message sequence number (for Rejects)
 	TagRefMsgType   quickfix.Tag = 372 // Reference message type (for Rejects)
 	TagAccount      quickfix.Tag = 1   // Account ID (e.g., Trading Account)
 	TagTimeInForce  quickfix.Tag = 59  // How long the order stays active
 
 	// Message Types (Values for Tag 35)
-	MsgTypeLogon              = "A" // Connection established
-	MsgTypeReject             = "3" // Session-level reject
-	MsgTypeExecutionReport    = "8" // Server telling us about an order change
-	MsgTypeOrderCancelReject  = "9" // Server rejected our request to cancel
-	MsgTypeNewOrderSingle     = "D" // We are sending a new order
-	MsgTypeOrderCancelRequest = "F" // Request to cancel an existing order
-	MsgTypeHeartBeat          = "0" // Heartbeat
+	MsgTypeLogon               = "A" // Connection established
+	MsgTypeReject              = "3" // Session-level reject
+	MsgTypeExecutionReport     = "8" // Server telling us about an order change
+	MsgTypeOrderCancelReject   = "9" // Server rejected our request to cancel
+	MsgTypeNewOrderSingle      = "D" // We are sending a new order
+	MsgTypeOrderCancelRequest  = "F" // Request to cancel an existing order
+	MsgTypeOrderReplaceRequest = "G" // Request to modify an existing order
+	MsgTypeHeartBeat           = "0" // Heartbeat
 
 	// Field Values
 	SideBuy       = "1" // Value '1' means Buy
 	OrdTypeMarket = "1" // Value '1' means Market Order
+	OrdTypeLimit  = "2" // Value '2' means Limit Order
 
 	// Time In Force Values (Tag 59)
 	TimeInForceDay = "0" // Active for the trading day
