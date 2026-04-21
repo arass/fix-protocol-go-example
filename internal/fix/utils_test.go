@@ -43,3 +43,26 @@ func TestTranslateOrdStatus(t *testing.T) {
 		}
 	}
 }
+
+func TestTranslateMsgType(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{MsgTypeLogon, "Logon"},
+		{MsgTypeHeartBeat, "Heartbeat"},
+		{MsgTypeReject, "Session Reject"},
+		{MsgTypeExecutionReport, "Execution Report"},
+		{MsgTypeOrderCancelReject, "Order Cancel Reject"},
+		{MsgTypeNewOrderSingle, "New Order Single"},
+		{MsgTypeOrderCancelRequest, "Order Cancel Request"},
+		{"X", "Unknown Type (X)"},
+	}
+
+	for _, test := range tests {
+		result := translateMsgType(test.input)
+		if result != test.expected {
+			t.Errorf("translateMsgType(%s) = %s; want %s", test.input, result, test.expected)
+		}
+	}
+}
