@@ -41,6 +41,7 @@ const (
 	MsgTypeNewOrderSingle      = "D" // We are sending a new order
 	MsgTypeOrderCancelRequest  = "F" // Request to cancel an existing order
 	MsgTypeOrderReplaceRequest = "G" // Request to modify an existing order
+	MsgTypeOrderStatusRequest  = "H" // Request for an order's current status
 	MsgTypeHeartBeat           = "0" // Heartbeat
 
 	// Field Values

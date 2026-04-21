@@ -17,7 +17,7 @@ import (
 // The FIX engine will call methods on this struct when events happen.
 type Application struct {
 	SessionID   quickfix.SessionID // Stores the ID of the current connection
-	LastClOrdID string             // Stores the ID of the last order sent (to allow cancelling/replacing it)
+	LastClOrdID string             // Stores the ID of the last order sent (to allow cancelling/replacing/statusing it)
 }
 
 // NewApplication creates a new instance of our FIX application logic.
@@ -43,11 +43,15 @@ func (a *Application) OnLogon(sessionID quickfix.SessionID) {
 		time.Sleep(1 * time.Second)
 		a.sendOrder()
 
-		// Wait 5 seconds, then try to modify (replace) it
+		// Wait 3 seconds, then request status
+		time.Sleep(2 * time.Second)
+		a.sendOrderStatusRequest()
+
+		// Wait seconds, then try to modify (replace) it
 		time.Sleep(5 * time.Second)
 		a.sendReplaceOrder()
 
-		// Wait another 5 seconds and then try to cancel it
+		// Wait seconds and then try to cancel it
 		time.Sleep(5 * time.Second)
 		a.sendCancelOrder()
 	}()
@@ -145,7 +149,7 @@ func (a *Application) sendOrder() {
 	clOrdID := fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
 
-	// Store the ID so we can cancel/replace it later
+	// Store the ID so we can cancel/replace/status it later
 	a.LastClOrdID = clOrdID
 
 	// Symbol: What we want to trade
@@ -171,6 +175,39 @@ func (a *Application) sendOrder() {
 	err := quickfix.SendToTarget(msg, a.SessionID)
 	if err != nil {
 		log.Printf("Error: Failed to send order: %s", err)
+	}
+}
+
+// sendOrderStatusRequest constructs and sends an "Order Status Request" message.
+func (a *Application) sendOrderStatusRequest() {
+	if a.LastClOrdID == "" {
+		log.Printf("Action: No previous order to check status for.")
+		return
+	}
+
+	// 1. Create a new empty message
+	msg := quickfix.NewMessage()
+
+	// 2. Set the Header fields
+	//    MsgType 'H' tells the server this is an Order Status Request
+	msg.Header.SetField(TagMsgType, quickfix.FIXString(MsgTypeOrderStatusRequest))
+
+	// 3. Set the Body fields
+
+	// ClOrdID: The ID of the order we want to check
+	msg.Body.SetField(TagClOrdID, quickfix.FIXString(a.LastClOrdID))
+
+	// Side: Must match the original order
+	msg.Body.SetField(TagSide, quickfix.FIXString(SideBuy))
+
+	// Symbol: Must match the original order
+	msg.Body.SetField(TagSymbol, quickfix.FIXString("AAPL"))
+
+	// 4. Send the message
+	log.Printf("Action: Sending Order Status Request (ID: %s)...", a.LastClOrdID)
+	err := quickfix.SendToTarget(msg, a.SessionID)
+	if err != nil {
+		log.Printf("Error: Failed to send status request: %s", err)
 	}
 }
 
