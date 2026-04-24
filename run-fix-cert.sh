@@ -6,8 +6,8 @@
 # This script prepares the environment and starts the Go FIX Client.
 #
 # Usage:
-#   chmod +x run.sh
-#   ./run.sh
+#   chmod +x run-fix-cert.sh
+#   ./run-fix-cert.sh [arguments]
 # -----------------------------------------------------------------------------
 
 # 1. Stop if any command fails
@@ -22,8 +22,6 @@ if ! command -v go &> /dev/null; then
 fi
 
 # 3. Check for config.cfg, copy from example if absent
-#    This allows developers to have their own local settings without
-#    worrying about overwriting them on 'git pull'.
 if [ ! -f "config.cfg" ]; then
     if [ -f "config.cfg.example" ]; then
         echo "System: Initializing config.cfg from example template..."
@@ -36,16 +34,14 @@ if [ ! -f "config.cfg" ]; then
 fi
 
 # 4. Create necessary directories for the app
-#    The app will write its logs and session data here.
 mkdir -p log store
 
 # 5. Fix/Download dependencies
-#    This ensures go.sum is correct and the quickfix library is downloaded.
 echo "System: Downloading dependencies (go mod tidy)..."
 go mod tidy
 
 # 6. Run the Application
-#    We point to the entry point in cmd/thisgofix/
-echo "System: Starting application..."
+#    "$@" passes all arguments from this script directly to the go run command.
+echo "System: Starting application with args: $@"
 echo "-----------------------------------------------------------------------------"
-go run cmd/fixtest/main.go
+go run cmd/fixtest/main.go "$@"
