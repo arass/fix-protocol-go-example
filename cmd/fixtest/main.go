@@ -52,8 +52,17 @@ func main() {
 		log.Fatalf("TestRunner: Timeout waiting for logon")
 	}
 
-	// 3. Execute Scenarios
-	runScenarios(app)
+	// 3. Execute Scenarios (Categorized)
+	testSides(app)
+	testOrderTypes(app)
+	testExecInst(app)
+	testSymbology(app)
+	testTIF(app)
+	testSettlement(app)
+	testMisc(app)
+	testFractional(app)
+	testNotional(app)
+	testExtendedHours(app)
 
 	// 4. Keep running for a few seconds to see execution reports
 	log.Println("TestRunner: All scenarios sent. Waiting for responses...")
@@ -63,191 +72,82 @@ func main() {
 	initiator.Stop()
 }
 
-func runScenarios(app *fix.Application) {
-	// --- SIDES BATCH ---
+func testSides(app *fix.Application) {
 	log.Println("--- Group: SIDES ---")
-
-	log.Println("Scenario 1: Buy AAPL MKT")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 2: Sell AAPL 300 GTC")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideSell, Qty: "1", OrdType: fix.OrdTypeLimit, LimitPrice: "300", TIF: fix.TimeInForceGTC})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 3: Sell Short QQQ 650")
 	app.SendOrder(fix.OrderParams{Symbol: "QQQ", Side: fix.SideSellShort, Qty: "1", OrdType: fix.OrdTypeLimit, LimitPrice: "650", TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
+}
 
-	// --- ORDER TYPE BATCH ---
+func testOrderTypes(app *fix.Application) {
 	log.Println("--- Group: ORDER TYPE ---")
-
-	log.Println("Scenario 4: MKT - Buy 1 AAPL")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 5: Limit - Sell Short 1 QQQ @ 650")
-	app.SendOrder(fix.OrderParams{Symbol: "QQQ", Side: fix.SideSellShort, Qty: "1", OrdType: fix.OrdTypeLimit, LimitPrice: "650", TIF: fix.TimeInForceDay})
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 6: Stop - Buy 1 BRK.B @ 500")
 	app.SendOrder(fix.OrderParams{Symbol: "BRK.B", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeStop, StopPrice: "500", TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 7: Stop Limit - Buy 1 BABA @ 150 STP 150 LMT")
 	app.SendOrder(fix.OrderParams{Symbol: "BABA", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeStopLimit, StopPrice: "150", LimitPrice: "150", TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 8: Market on close")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarketOnClose, TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 9: Limit on close")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeLimitOnClose, LimitPrice: "150", TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
+}
 
-	// --- EXEC INST BATCH ---
+func testExecInst(app *fix.Application) {
 	log.Println("--- Group: EXEC INST ---")
-
-	log.Println("Scenario 10: Not Held - Buy 100 BKNG MKT")
 	app.SendOrder(fix.OrderParams{Symbol: "BKNG", Side: fix.SideBuy, Qty: "100", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, ExecInst: fix.ExecInstNotHeld})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 11: Held - Buy 1 AAPL MKT")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, ExecInst: fix.ExecInstHeld})
 	time.Sleep(1 * time.Second)
+}
 
-	// --- SYMBOLOGY BATCH ---
+func testSymbology(app *fix.Application) {
 	log.Println("--- Group: SYMBOLOGY ---")
-
-	log.Println("Scenario 12: Symbol Suffix - Buy 1 BRK.B @ 500 STP")
 	app.SendOrder(fix.OrderParams{Symbol: "BRK.B", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeStop, StopPrice: "500", TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
+}
 
-	// --- TIF BATCH ---
+func testTIF(app *fix.Application) {
 	log.Println("--- Group: TIF ---")
-
-	log.Println("Scenario 13: TIF Day - Buy 1 AAPL MKT")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 14: TIF GTC - Sell 1 AAPL 300 GTC")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideSell, Qty: "1", OrdType: fix.OrdTypeLimit, LimitPrice: "300", TIF: fix.TimeInForceGTC})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 15: TIF IOC - Buy 1 AAPL MKT IOC")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceIOC})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 16: TIF FOK - Buy 1 AAPL MKT FOK")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceFOK})
 	time.Sleep(1 * time.Second)
+}
 
-	// --- SETTLEMENT BATCH ---
+func testSettlement(app *fix.Application) {
 	log.Println("--- Group: SETTLEMENT ---")
-
-	log.Println("Scenario 17: Regular")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypRegular})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 18: Cash (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypCash})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 19: Next Day (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypNextDay})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 20: T+2 (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypTplus2})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 21: T+3 (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypTplus3})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 22: T+4 (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypTplus4})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 23: Future (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypFuture})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 24: When Issued (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypWhenIssued})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 25: Sellers Option (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypSellersOption})
 	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 26: T+5 (Expected: REJECT)")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypTplus5})
 	time.Sleep(1 * time.Second)
+}
 
-	// --- MISC BATCH ---
-	log.Println("--- Group: MISC SCENARIOS ---")
-
-	log.Println("Scenario 27: Partial Fill & Cancel - Buy 1600 LCID MKT")
-	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "1600", OrdType: fix.OrdTypeMarket})
-	time.Sleep(1 * time.Second)
-	app.SendCancelOrder()
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 28: Full Fill - Buy 1 AAPL MKT")
-	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket})
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 29: Cancel an Acknowledged Order - Buy 1 BRK.B 500 STP")
-	app.SendOrder(fix.OrderParams{Symbol: "BRK.B", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeStop, StopPrice: "500"})
-	time.Sleep(1 * time.Second)
-	app.SendCancelOrder()
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 30: Increase Quantity and Price - Replace to 3 shares @ 450")
-	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "2", OrdType: fix.OrdTypeLimit, LimitPrice: "450"})
-	time.Sleep(1 * time.Second)
-	app.SendReplaceOrder("3", fix.OrdTypeLimit, "450")
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 31: Reject an order - Buy 1 LCID @ 2500 LMT")
-	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeLimit, LimitPrice: "2500"})
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 32: Reject Cxl/Replace Request - Buy 3 LCID @ 5 LMT")
-	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "3", OrdType: fix.OrdTypeLimit, LimitPrice: "5"})
-	time.Sleep(1 * time.Second)
-	app.SendReplaceOrder("3", fix.OrdTypeLimit, "5")
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 33: Market to Limit - Replace to 3.00 LMT")
-	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "2600", OrdType: fix.OrdTypeMarket})
-	time.Sleep(1 * time.Second)
-	app.SendReplaceOrder("2600", fix.OrdTypeLimit, "3.00")
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 34: Limit to Market - Replace to MKT")
-	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "5", OrdType: fix.OrdTypeLimit, LimitPrice: "5.02"})
-	time.Sleep(1 * time.Second)
-	app.SendReplaceOrder("5", fix.OrdTypeMarket, "")
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 35: Done For Day - Coordinate with RQD")
-	app.SendOrder(fix.OrderParams{Symbol: "GRO", Side: fix.SideBuy, Qty: "2600", OrdType: fix.OrdTypeLimit, LimitPrice: "3.00"})
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 36: Unsolicited Cancel - Coordinate with RQD")
-	app.SendOrder(fix.OrderParams{Symbol: "GRO", Side: fix.SideBuy, Qty: "2700", OrdType: fix.OrdTypeLimit, LimitPrice: "2.99"})
-	time.Sleep(1 * time.Second)
-
-	log.Println("Scenario 37: ExecTransType New (Tag 20=0)")
-	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket})
-	time.Sleep(1 * time.Second)
-
-	// --- FRACTIONAL BATCH ---
+func testFractional(app *fix.Application) {
 	log.Println("--- Group: FRACTIONAL ---")
-
 	log.Println("Scenario 38: Fractional MKT Buy .25 AMZN")
 	app.SendOrder(fix.OrderParams{Symbol: "AMZN", Side: fix.SideBuy, Qty: ".25", OrdType: fix.OrdTypeMarket, IsFractional: true})
 	time.Sleep(1 * time.Second)
@@ -271,10 +171,10 @@ func runScenarios(app *fix.Application) {
 	time.Sleep(1 * time.Second)
 	app.SendReplaceOrder(".10", fix.OrdTypeLimit, "403")
 	time.Sleep(1 * time.Second)
+}
 
-	// --- NOTIONAL BATCH ---
+func testNotional(app *fix.Application) {
 	log.Println("--- Group: NOTIONAL ---")
-
 	log.Println("Scenario 43: Notional MKT Buy $100 TSLA")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "100", OrdType: fix.OrdTypeMarket})
 	time.Sleep(1 * time.Second)
@@ -298,10 +198,10 @@ func runScenarios(app *fix.Application) {
 	time.Sleep(1 * time.Second)
 	app.SendReplaceOrder("180", fix.OrdTypeMarket, "")
 	time.Sleep(1 * time.Second)
+}
 
-	// --- EXTENDED HOURS BATCH ---
+func testExtendedHours(app *fix.Application) {
 	log.Println("--- Group: EXTENDED HOURS ---")
-
 	log.Println("Scenario 48: AM Only DIA")
 	app.SendOrder(fix.OrderParams{Symbol: "DIA", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeLimit, LimitPrice: "450", TradingSes: fix.TradingSessionAM})
 	time.Sleep(1 * time.Second)
@@ -312,7 +212,66 @@ func runScenarios(app *fix.Application) {
 
 	log.Println("Scenario 50: All Sessions DIA")
 	app.SendOrder(fix.OrderParams{Symbol: "DIA", Side: fix.SideBuy, Qty: "3", OrdType: fix.OrdTypeLimit, LimitPrice: "452", TradingSes: fix.TradingSessionBoth})
+	time.Sleep(1 * time.Second)
+}
 
+func testMisc(app *fix.Application) {
+	log.Println("--- Group: MISC SCENARIOS ---")
+	log.Println("Scenario 27: Partial Fill & Cancel - Buy 1600 LCID MKT")
+	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "1600", OrdType: fix.OrdTypeMarket})
+	time.Sleep(1 * time.Second)
+	app.SendCancelOrder()
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 28: Full Fill")
+	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket})
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 29: Cancel an Acknowledged Order")
+	app.SendOrder(fix.OrderParams{Symbol: "BRK.B", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeStop, StopPrice: "500"})
+	time.Sleep(1 * time.Second)
+	app.SendCancelOrder()
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 30: Increase Quantity and Price")
+	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "2", OrdType: fix.OrdTypeLimit, LimitPrice: "450"})
+	time.Sleep(1 * time.Second)
+	app.SendReplaceOrder("3", fix.OrdTypeLimit, "450")
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 31: Reject an order")
+	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeLimit, LimitPrice: "2500"})
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 32: Reject Cxl/Replace Request")
+	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "3", OrdType: fix.OrdTypeLimit, LimitPrice: "5"})
+	time.Sleep(1 * time.Second)
+	app.SendReplaceOrder("3", fix.OrdTypeLimit, "5")
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 33: Market to Limit")
+	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "2600", OrdType: fix.OrdTypeMarket})
+	time.Sleep(1 * time.Second)
+	app.SendReplaceOrder("2600", fix.OrdTypeLimit, "3.00")
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 34: Limit to Market")
+	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "5", OrdType: fix.OrdTypeLimit, LimitPrice: "5.02"})
+	time.Sleep(1 * time.Second)
+	app.SendReplaceOrder("5", fix.OrdTypeMarket, "")
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 35: Done For Day")
+	app.SendOrder(fix.OrderParams{Symbol: "GRO", Side: fix.SideBuy, Qty: "2600", OrdType: fix.OrdTypeLimit, LimitPrice: "3.00"})
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 36: Unsolicited Cancel")
+	app.SendOrder(fix.OrderParams{Symbol: "GRO", Side: fix.SideBuy, Qty: "2700", OrdType: fix.OrdTypeLimit, LimitPrice: "2.99"})
+	time.Sleep(1 * time.Second)
+
+	log.Println("Scenario 37: ExecTransType New (Tag 20=0)")
+	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket})
+	time.Sleep(1 * time.Second)
 }
 
 // -----------------------------------------------------------------------------
