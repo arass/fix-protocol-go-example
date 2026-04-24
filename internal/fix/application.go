@@ -58,7 +58,7 @@ func (a *Application) OnLogon(sessionID quickfix.SessionID) {
 	// message processing loop. We wait 1 second to ensure everything is ready.
 	go func() {
 		time.Sleep(1 * time.Second)
-		a.SendOrder("AAPL", SideBuy, "100", OrdTypeMarket, "", "", TimeInForceDay, "", "")
+		a.SendOrder(OrderParams{Symbol: "AAPL", Side: SideBuy, Qty: "100", OrdType: OrdTypeMarket, TIF: TimeInForceDay})
 
 		// Wait 3 seconds, then request status
 		time.Sleep(3 * time.Second)
@@ -144,8 +144,24 @@ func (a *Application) FromApp(msg *quickfix.Message, sessionID quickfix.SessionI
 	return nil
 }
 
+// OrderParams is a helper struct to avoid long parameter lists in SendOrder
+type OrderParams struct {
+	Symbol       string
+	Side         string
+	Qty          string
+	OrdType      string
+	LimitPrice   string
+	StopPrice    string
+	TIF          string
+	ExecInst     string
+	SettlTyp     string
+	IsFractional bool
+	Notional     string
+	TradingSes   string
+}
+
 // SendOrder constructs and sends a "New Order Single" message to the server.
-func (a *Application) SendOrder(symbol string, side string, qty string, ordType string, limitPrice string, stopPrice string, tif string, execInst string, settlTyp string) string {
+func (a *Application) SendOrder(p OrderParams) string {
 	// 1. Create a new empty message
 	msg := quickfix.NewMessage()
 
@@ -165,47 +181,62 @@ func (a *Application) SendOrder(symbol string, side string, qty string, ordType 
 	a.LastClOrdID = clOrdID
 
 	// Symbology handling for Suffixes (e.g., BRK.B)
-	if strings.Contains(symbol, ".") {
-		parts := strings.Split(symbol, ".")
+	if strings.Contains(p.Symbol, ".") {
+		parts := strings.Split(p.Symbol, ".")
 		msg.Body.SetField(TagSymbol, quickfix.FIXString(parts[0]))
 		msg.Body.SetField(TagSymbolSfx, quickfix.FIXString(parts[1]))
 	} else {
-		msg.Body.SetField(TagSymbol, quickfix.FIXString(symbol))
+		msg.Body.SetField(TagSymbol, quickfix.FIXString(p.Symbol))
 	}
 
-	msg.Body.SetField(TagSide, quickfix.FIXString(side))
+	msg.Body.SetField(TagSide, quickfix.FIXString(p.Side))
 	msg.Body.SetField(TagTransactTime, quickfix.FIXString(time.Now().Format("20060102-15:04:05.000")))
-	msg.Body.SetField(TagOrderQty, quickfix.FIXString(qty))
-	msg.Body.SetField(TagOrdType, quickfix.FIXString(ordType))
 
-	if limitPrice != "" {
-		msg.Body.SetField(TagPrice, quickfix.FIXString(limitPrice))
+	// Handling Quantity vs Notional
+	if p.Notional != "" {
+		msg.Body.SetField(TagCashOrderQty, quickfix.FIXString(p.Notional))
+	} else {
+		msg.Body.SetField(TagOrderQty, quickfix.FIXString(p.Qty))
 	}
 
-	if stopPrice != "" {
-		msg.Body.SetField(TagStopPx, quickfix.FIXString(stopPrice))
+	msg.Body.SetField(TagOrdType, quickfix.FIXString(p.OrdType))
+
+	if p.LimitPrice != "" {
+		msg.Body.SetField(TagPrice, quickfix.FIXString(p.LimitPrice))
 	}
 
-	if tif != "" {
-		msg.Body.SetField(TagTimeInForce, quickfix.FIXString(tif))
+	if p.StopPrice != "" {
+		msg.Body.SetField(TagStopPx, quickfix.FIXString(p.StopPrice))
 	}
 
-	if execInst != "" {
-		msg.Body.SetField(TagExecInst, quickfix.FIXString(execInst))
+	if p.TIF != "" {
+		msg.Body.SetField(TagTimeInForce, quickfix.FIXString(p.TIF))
 	}
 
-	if settlTyp != "" {
-		msg.Body.SetField(TagSettlmntTyp, quickfix.FIXString(settlTyp))
+	if p.ExecInst != "" {
+		msg.Body.SetField(TagExecInst, quickfix.FIXString(p.ExecInst))
+	}
+
+	if p.SettlTyp != "" {
+		msg.Body.SetField(TagSettlmntTyp, quickfix.FIXString(p.SettlTyp))
+	}
+
+	if p.IsFractional {
+		msg.Header.SetField(TagTargetSubID, quickfix.FIXString("FRAC"))
+	}
+
+	if p.TradingSes != "" {
+		msg.Body.SetField(TagTradingSessionID, quickfix.FIXString(p.TradingSes))
 	}
 
 	// Special handling for Sell Short (Side=5)
-	if side == SideSellShort {
+	if p.Side == SideSellShort {
 		msg.Body.SetField(TagLocateReqd, quickfix.FIXString("N"))
 		msg.Body.SetField(TagLocateID, quickfix.FIXString("LOCATE-ID-123"))
 	}
 
 	// 4. Send the message to the session
-	log.Printf("Action: Sending New Order Single (ID: %s, Symbol: %s, Side: %s, Type: %s)...", clOrdID, symbol, side, ordType)
+	log.Printf("Action: Sending New Order Single (ID: %s, Symbol: %s, Side: %s, Type: %s)...", clOrdID, p.Symbol, p.Side, p.OrdType)
 	err := quickfix.SendToTarget(msg, a.SessionID)
 	if err != nil {
 		log.Printf("Error: Failed to send order: %s", err)
