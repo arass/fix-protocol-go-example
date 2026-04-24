@@ -176,6 +176,9 @@ func (a *Application) SendOrder(p OrderParams) string {
 	}
 	msg.Body.SetField(TagAccount, quickfix.FIXString(account))
 
+	// All orders marked as Agency (Tag 47=A)
+	msg.Body.SetField(TagRule80A, quickfix.FIXString(Rule80AAgency))
+
 	clOrdID := fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
 	a.LastClOrdID = clOrdID
@@ -306,6 +309,9 @@ func (a *Application) SendReplaceOrder(qty string, ordType string, price string)
 		account = "FIX-TEST-ACCOUNT-1"
 	}
 	msg.Body.SetField(TagAccount, quickfix.FIXString(account))
+
+	// All replaces marked as Agency (Tag 47=A)
+	msg.Body.SetField(TagRule80A, quickfix.FIXString(Rule80AAgency))
 
 	// Symbol: Must match the original order
 	msg.Body.SetField(TagSymbol, quickfix.FIXString("AAPL"))
