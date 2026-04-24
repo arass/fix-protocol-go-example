@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/quickfixgo/quickfix"
@@ -18,11 +19,16 @@ import (
 type Application struct {
 	SessionID   quickfix.SessionID // Stores the ID of the current connection
 	LastClOrdID string             // Stores the ID of the last order sent (to allow cancelling/replacing/statusing it)
+	IsTestMode  bool               // If true, disables the automatic "New -> Status -> Replace -> Cancel" flow
+	OnLogonChan chan bool          // Channel to signal when logon is successful
 }
 
 // NewApplication creates a new instance of our FIX application logic.
 func NewApplication() *Application {
-	return &Application{}
+	return &Application{
+		IsTestMode:  false,
+		OnLogonChan: make(chan bool, 1),
+	}
 }
 
 // OnCreate is called when a FIX session is created (before connecting).
@@ -37,23 +43,34 @@ func (a *Application) OnCreate(sessionID quickfix.SessionID) {
 func (a *Application) OnLogon(sessionID quickfix.SessionID) {
 	log.Printf("Connection: Logged On to %s", sessionID)
 
+	// Signal logon success
+	select {
+	case a.OnLogonChan <- true:
+	default:
+	}
+
+	if a.IsTestMode {
+		log.Printf("System: Application is in TEST MODE. Automatic flow disabled.")
+		return
+	}
+
 	// We send an order in a separate thread (goroutine) so we don't block the
 	// message processing loop. We wait 1 second to ensure everything is ready.
 	go func() {
 		time.Sleep(1 * time.Second)
-		a.sendOrder()
+		a.SendOrder("AAPL", SideBuy, "100", OrdTypeMarket, "", "", TimeInForceDay, "", "")
 
 		// Wait 3 seconds, then request status
-		time.Sleep(2 * time.Second)
-		a.sendOrderStatusRequest()
+		time.Sleep(3 * time.Second)
+		a.SendOrderStatusRequest()
 
-		// Wait seconds, then try to modify (replace) it
-		time.Sleep(5 * time.Second)
-		a.sendReplaceOrder()
+		// Wait 3 seconds, then try to modify (replace) it
+		time.Sleep(3 * time.Second)
+		a.SendReplaceOrder("200", OrdTypeLimit, "150.50")
 
-		// Wait seconds and then try to cancel it
-		time.Sleep(5 * time.Second)
-		a.sendCancelOrder()
+		// Wait 3 seconds and then try to cancel it
+		time.Sleep(3 * time.Second)
+		a.SendCancelOrder()
 	}()
 }
 
@@ -127,59 +144,77 @@ func (a *Application) FromApp(msg *quickfix.Message, sessionID quickfix.SessionI
 	return nil
 }
 
-// sendOrder constructs and sends a "New Order Single" message to the server.
-func (a *Application) sendOrder() {
+// SendOrder constructs and sends a "New Order Single" message to the server.
+func (a *Application) SendOrder(symbol string, side string, qty string, ordType string, limitPrice string, stopPrice string, tif string, execInst string, settlTyp string) string {
 	// 1. Create a new empty message
 	msg := quickfix.NewMessage()
 
 	// 2. Set the Header fields (Required)
-	//    MsgType 'D' tells the server this is a New Order Single
 	msg.Header.SetField(TagMsgType, quickfix.FIXString(MsgTypeNewOrderSingle))
 
-	// 3. Set the Body fields (The details of the order)
+	// 3. Set the Body fields
 
-	// Account: The trading account ID (Sourced from env or default)
 	account := os.Getenv("ACCOUNT_NUMBER")
 	if account == "" {
 		account = "FIX-TEST-ACCOUNT-1"
 	}
 	msg.Body.SetField(TagAccount, quickfix.FIXString(account))
 
-	// ClOrdID: A unique ID WE generate to track this order
 	clOrdID := fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
-
-	// Store the ID so we can cancel/replace/status it later
 	a.LastClOrdID = clOrdID
 
-	// Symbol: What we want to trade
-	msg.Body.SetField(TagSymbol, quickfix.FIXString("AAPL"))
+	// Symbology handling for Suffixes (e.g., BRK.B)
+	if strings.Contains(symbol, ".") {
+		parts := strings.Split(symbol, ".")
+		msg.Body.SetField(TagSymbol, quickfix.FIXString(parts[0]))
+		msg.Body.SetField(TagSymbolSfx, quickfix.FIXString(parts[1]))
+	} else {
+		msg.Body.SetField(TagSymbol, quickfix.FIXString(symbol))
+	}
 
-	// Side: Buy (1)
-	msg.Body.SetField(TagSide, quickfix.FIXString(SideBuy))
-
-	// TransactTime: Current UTC timestamp
+	msg.Body.SetField(TagSide, quickfix.FIXString(side))
 	msg.Body.SetField(TagTransactTime, quickfix.FIXString(time.Now().Format("20060102-15:04:05.000")))
+	msg.Body.SetField(TagOrderQty, quickfix.FIXString(qty))
+	msg.Body.SetField(TagOrdType, quickfix.FIXString(ordType))
 
-	// OrderQty: How much we want
-	msg.Body.SetField(TagOrderQty, quickfix.FIXString("100"))
+	if limitPrice != "" {
+		msg.Body.SetField(TagPrice, quickfix.FIXString(limitPrice))
+	}
 
-	// OrdType: Market (1) - execute immediately at best price
-	msg.Body.SetField(TagOrdType, quickfix.FIXString(OrdTypeMarket))
+	if stopPrice != "" {
+		msg.Body.SetField(TagStopPx, quickfix.FIXString(stopPrice))
+	}
 
-	// TimeInForce: Day (0) - order expires at end of session
-	msg.Body.SetField(TagTimeInForce, quickfix.FIXString(TimeInForceDay))
+	if tif != "" {
+		msg.Body.SetField(TagTimeInForce, quickfix.FIXString(tif))
+	}
+
+	if execInst != "" {
+		msg.Body.SetField(TagExecInst, quickfix.FIXString(execInst))
+	}
+
+	if settlTyp != "" {
+		msg.Body.SetField(TagSettlmntTyp, quickfix.FIXString(settlTyp))
+	}
+
+	// Special handling for Sell Short (Side=5)
+	if side == SideSellShort {
+		msg.Body.SetField(TagLocateReqd, quickfix.FIXString("N"))
+		msg.Body.SetField(TagLocateID, quickfix.FIXString("LOCATE-ID-123"))
+	}
 
 	// 4. Send the message to the session
-	log.Printf("Action: Sending New Order Single (ID: %s)...", clOrdID)
+	log.Printf("Action: Sending New Order Single (ID: %s, Symbol: %s, Side: %s, Type: %s)...", clOrdID, symbol, side, ordType)
 	err := quickfix.SendToTarget(msg, a.SessionID)
 	if err != nil {
 		log.Printf("Error: Failed to send order: %s", err)
 	}
+	return clOrdID
 }
 
-// sendOrderStatusRequest constructs and sends an "Order Status Request" message.
-func (a *Application) sendOrderStatusRequest() {
+// SendOrderStatusRequest constructs and sends an "Order Status Request" message.
+func (a *Application) SendOrderStatusRequest() {
 	if a.LastClOrdID == "" {
 		log.Printf("Action: No previous order to check status for.")
 		return
@@ -211,8 +246,8 @@ func (a *Application) sendOrderStatusRequest() {
 	}
 }
 
-// sendReplaceOrder constructs and sends an "Order Cancel/Replace Request" message.
-func (a *Application) sendReplaceOrder() {
+// SendReplaceOrder constructs and sends an "Order Cancel/Replace Request" message.
+func (a *Application) SendReplaceOrder(qty string, ordType string, price string) {
 	if a.LastClOrdID == "" {
 		log.Printf("Action: No previous order to replace.")
 		return
@@ -250,16 +285,17 @@ func (a *Application) sendReplaceOrder() {
 	// TransactTime: Current UTC timestamp
 	msg.Body.SetField(TagTransactTime, quickfix.FIXString(time.Now().Format("20060102-15:04:05.000")))
 
-	// MODIFICATIONS: Let's change it to a Limit Order for 200 units
-	msg.Body.SetField(TagOrderQty, quickfix.FIXString("200"))
-	msg.Body.SetField(TagOrdType, quickfix.FIXString(OrdTypeLimit))
-	msg.Body.SetField(TagPrice, quickfix.FIXString("150.50"))
+	// MODIFICATIONS
+	msg.Body.SetField(TagOrderQty, quickfix.FIXString(qty))
+	msg.Body.SetField(TagOrdType, quickfix.FIXString(ordType))
+	if ordType == OrdTypeLimit && price != "" {
+		msg.Body.SetField(TagPrice, quickfix.FIXString(price))
+	}
 
 	// 4. Send the message
 	log.Printf("Action: Sending Order Replace Request (Target ID: %s, New ID: %s)...", a.LastClOrdID, replaceClOrdID)
 
-	// Crucial: Update our last ID to the new one, as subsequent actions (like cancel)
-	// must reference the NEWEST ClOrdID from the replace request.
+	// Crucial: Update our last ID to the new one
 	a.LastClOrdID = replaceClOrdID
 
 	err := quickfix.SendToTarget(msg, a.SessionID)
@@ -268,8 +304,8 @@ func (a *Application) sendReplaceOrder() {
 	}
 }
 
-// sendCancelOrder constructs and sends an "Order Cancel Request" message.
-func (a *Application) sendCancelOrder() {
+// SendCancelOrder constructs and sends an "Order Cancel Request" message.
+func (a *Application) SendCancelOrder() {
 	if a.LastClOrdID == "" {
 		log.Printf("Action: No previous order to cancel.")
 		return
