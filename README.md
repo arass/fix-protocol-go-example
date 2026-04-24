@@ -1,24 +1,26 @@
-# Go FIX Client (Beginner Guide)
+# Go FIX Client (Trading & Certification Tool)
 
-This is a simple trading application that connects to a server using the **FIX Protocol** (Financial Information eXchange). It is designed to be easy to read and understand for new developers.
+This application is a FIX Protocol client built with Go and `quickfixgo`. It serves two purposes:
+1.  **Main App**: A simple trading interface for sending manual/automated orders.
+2.  **Certification Tool**: A test runner (`fixtest`) designed to execute 50+ certification scenarios required for exchange sign-off.
 
-## What does this app do?
-
-1.  **Connects** to a trading server (like a stock exchange).
-2.  **Logs in** automatically.
-3.  **Sends a "Buy" order** for EUR/USD.
-4.  **Prints the result** (Did we buy it? Was it rejected?) to the screen.
+## Some Features
+*   **Sign-off Test Runner**: Automated and interactive execution of 50+ test cases.
+*   **Order Complexity**: Support for Market, Limit, Stop, Stop Limit, MOC, and LOC orders.
+*   **Fractional & Notional**: Support for fractional share quantities (Tag 57=FRAC) and dollar-based notional orders (Tag 152).
+*   **Advanced Symbology**: Automatic suffix handling (e.g., `BRK.B` splits to Tag 55=BRK, Tag 65=B).
+*   **Compliance**: All orders are automatically marked as **Agency** (Tag 47=A).
+*   **Interactive Mode**: Step-by-step test execution for manual verification.
 
 ## Project Structure
 
-We follow the standard Go project layout:
-
-*   **`cmd/thisgofix/`**: Contains the main entry point (`main.go`).
-*   **`internal/fix/`**: Contains the core application logic.
-    *   `application.go`: Handles FIX events (`OnLogon`, `FromApp`).
-    *   `constants.go`: Defines FIX tags and message types.
-    *   `application_test.go`: Unit tests for the application logic.
-    *   `utils_test.go`: Unit tests for helper functions.
+*   **`cmd/thisgofix/`**: Main application entry point.
+*   **`cmd/fixtest/`**: Certification test runner entry point.
+*   **`internal/fix/`**: Core logic and utilities.
+    *   `application.go`: Implements `quickfix.Application` and high-level order methods.
+    *   `constants.go`: Centralized FIX tags, message types, and enum values.
+    *   `utils.go`: Helper functions for human-readable console output and translations.
+*   **`run-fix-cert.sh`**: Helper script to run the certification suite with arguments.
 *   **`config.cfg`**: The FIX session configuration.
 *   **`go.mod` / `go.sum`**: Dependency management.
 
@@ -29,9 +31,7 @@ You need **Go** installed on your computer.
 1.  Open your terminal/command prompt.
 2.  Type `go version` to check if it's installed.
 
-## How to Run
-
-### Step 1: Download Dependencies (Use the script!)
+### Download Dependencies (Use the script!)
 
 Since you are seeing "missing go.sum entry" errors, you **MUST** run the provided script to fix it.
 
@@ -40,15 +40,38 @@ Since you are seeing "missing go.sum entry" errors, you **MUST** run the provide
 
 This will download the `quickfixgo` library and fix the `go.sum` file.
 
-### Step 2: Start the App
+## Configuration (`config.cfg`)
 
-Run the application with:
+If you need to change the server details, edit `config.cfg`.
+
+*   **SocketConnectHost**: The IP address of the server (e.g., `10.10.70.60`).
+*   **SocketConnectPort**: The port number (e.g., `7605`).
+*   **SenderCompID**: Your ID.
+*   **TargetCompID**: The server's ID.
+
+
+## How to Run
+
+### Certification Test Runner
+To run the full suite of 50 scenarios:
+
+```bash
+# Automatic mode (1s delay between cases)
+./run-fix-cert.sh
+
+# Interactive mode (Waits for ENTER between every case)
+./run-fix-cert.sh -interactive
+
+```
+
+### Main Application Runner
+To run the standard application:
 
 ```bash
 go run cmd/thisgofix/main.go
 ```
 
-### Step 3: Watch the Output
+### Watching the Output
 
 You should see output like this:
 
@@ -67,7 +90,33 @@ Remaining Qty:   100
 ...
 ```
 
-### Step 4: Stop the App
+
+### How to Stop the App
+
+Press **Ctrl+C** in your terminal to stop the application gracefully.
+
+### Certification Application
+To run the certification application:
+
+```bash
+go run cmd/fixtest/main.go
+```
+
+## Certification Scenarios Covered
+
+The `fixtest` runner executes scenarios categorized as follows:
+1.  **SIDES**: Buy, Sell, Sell Short (with automatic Locate tags).
+2.  **ORDER TYPES**: Market, Limit, Stop, Stop Limit, Market on Close, Limit on Close.
+3.  **EXEC INST**: Not Held vs Held instructions.
+4.  **TIF**: Day, GTC, IOC, FOK.
+5.  **SETTLEMENT**: Regular through T+5, Cash, Next Day, Future.
+6.  **FRACTIONAL**: Fractional quantity orders using the `FRAC` indicator.
+7.  **NOTIONAL**: Dollar-based orders using Tag 152.
+8.  **EXTENDED HOURS**: AM Only, PM Only, and All Sessions.
+9.  **MISC**: Partial fills, cancels, price/qty modifications, and rejections.
+
+
+### How to Stop the App
 
 Press **Ctrl+C** in your terminal to stop the application gracefully.
 
@@ -79,14 +128,6 @@ To run the unit tests we added:
 go test ./internal/fix
 ```
 
-## Configuration (`config.cfg`)
-
-If you need to change the server details, edit `config.cfg`.
-
-*   **SocketConnectHost**: The IP address of the server (e.g., `10.10.70.60`).
-*   **SocketConnectPort**: The port number (e.g., `7605`).
-*   **SenderCompID**: Your ID.
-*   **TargetCompID**: The server's ID.
 
 ## Troubleshooting / Common Errors
 
@@ -109,6 +150,6 @@ Check `ExecType` (Tag 150), not just the message type, to know the true status o
 *   `ExecType=8 (Rejected)`: Order failed.
 *   `ExecType=F (Trade)`: Trade executed.
 
-## detailed Code Explanation
+## Detailed Code Explanation
 
 The `internal/fix/application.go` file contains the core logic. Open it in your editor and read through the `Application` struct methods (`OnLogon`, `FromApp`, etc.) to see exactly how we handle events.
