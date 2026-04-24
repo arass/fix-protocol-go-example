@@ -13,21 +13,23 @@ import (
 	"github.com/quickfixgo/quickfix"
 )
 
-// testDelay is the duration to pause between sending test orders.
+// testDelay is the duration to pause between sending test orders in automatic mode.
 const testDelay = 1 * time.Second
 
-// interactiveMode if true, waits for user input (Carriage Return) before each test case.
-const interactiveMode = false
+// Global variable for interactive mode, set via flag.
+var interactiveMode bool
 
 func main() {
+	// 1. Define command line flags
 	cfgFileName := flag.String("cfg", "config.cfg", "Path to config file")
+	flag.BoolVar(&interactiveMode, "interactive", false, "Wait for ENTER between each test case")
 	flag.Parse()
 
+	// 2. Open the configuration file
 	cfg, err := os.Open(*cfgFileName)
 	if err != nil {
 		log.Fatalf("Critical Error: Could not open config file '%s': %s", *cfgFileName, err)
 	}
-	// Correctly handling the close error
 	defer func() {
 		if closeErr := cfg.Close(); closeErr != nil {
 			log.Printf("Warning: Failed to close config file: %s", closeErr)
@@ -39,7 +41,7 @@ func main() {
 		log.Fatalf("Critical Error: Config file format is invalid: %s", err)
 	}
 
-	// 1. Setup Application in TEST MODE
+	// 3. Setup Application in TEST MODE
 	app := fix.NewApplication()
 	app.IsTestMode = true
 
@@ -55,7 +57,7 @@ func main() {
 		log.Fatalf("Critical Error: Failed to start application: %s", err)
 	}
 
-	// 2. Wait for Logon before starting tests
+	// 4. Wait for Logon before starting tests
 	log.Println("TestRunner: Waiting for FIX Logon...")
 	select {
 	case <-app.OnLogonChan:
@@ -64,7 +66,7 @@ func main() {
 		log.Fatalf("TestRunner: Timeout waiting for logon")
 	}
 
-	// 3. Execute Scenarios (Categorized)
+	// 5. Execute Scenarios (Categorized)
 	reader := bufio.NewReader(os.Stdin)
 
 	testSides(app, reader)
@@ -78,7 +80,7 @@ func main() {
 	testExtendedHours(app, reader)
 	testMisc(app, reader)
 
-	// 4. Keep running for a few seconds to see execution reports
+	// 6. Keep running for a few seconds to see final responses
 	log.Println("TestRunner: All scenarios sent. Waiting for responses...")
 	time.Sleep(10 * time.Second)
 
@@ -191,21 +193,21 @@ func testSettlement(app *fix.Application, r *bufio.Reader) {
 
 func testFractional(app *fix.Application, r *bufio.Reader) {
 	log.Println("--- Group: FRACTIONAL ---")
-	waitNext(r, "Scenario 38: Fractional MKT Buy .25 AMZN")
+	waitNext(r, "Scenario: Fractional MKT Buy .25 AMZN")
 	app.SendOrder(fix.OrderParams{Symbol: "AMZN", Side: fix.SideBuy, Qty: ".25", OrdType: fix.OrdTypeMarket, IsFractional: true})
 
-	waitNext(r, "Scenario 39: Fractional LMT Buy .99 TSLA @ 400")
+	waitNext(r, "Scenario: Fractional LMT Buy .99 TSLA @ 400")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Qty: ".99", OrdType: fix.OrdTypeLimit, LimitPrice: "400", IsFractional: true})
 
-	waitNext(r, "Scenario 40: Fractional GTC Buy .50 TSLA @ 401 LMT GTC")
+	waitNext(r, "Scenario: Fractional GTC Buy .50 TSLA @ 401 LMT GTC")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Qty: ".50", OrdType: fix.OrdTypeLimit, LimitPrice: "401", TIF: fix.TimeInForceGTC, IsFractional: true})
 
-	waitNext(r, "Scenario 41: Cancel Fractional Order")
+	waitNext(r, "Scenario: Cancel Fractional Order")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Qty: ".50", OrdType: fix.OrdTypeLimit, LimitPrice: "401", TIF: fix.TimeInForceGTC, IsFractional: true})
 	waitNext(r, "Confirm Cancel Fractional")
 	app.SendCancelOrder()
 
-	waitNext(r, "Scenario 42: Replace Fractional Order")
+	waitNext(r, "Scenario: Replace Fractional Order")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Qty: ".10", OrdType: fix.OrdTypeLimit, LimitPrice: "402", IsFractional: true})
 	waitNext(r, "Confirm Replace Fractional")
 	app.SendReplaceOrder(".10", fix.OrdTypeLimit, "403")
@@ -213,21 +215,21 @@ func testFractional(app *fix.Application, r *bufio.Reader) {
 
 func testNotional(app *fix.Application, r *bufio.Reader) {
 	log.Println("--- Group: NOTIONAL ---")
-	waitNext(r, "Scenario 43: Notional MKT Buy $100 TSLA")
+	waitNext(r, "Scenario: Notional MKT Buy $100 TSLA")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "100", OrdType: fix.OrdTypeMarket})
 
-	waitNext(r, "Scenario 44: Notional LMT Buy $135 TSLA @ 500")
+	waitNext(r, "Scenario: Notional LMT Buy $135 TSLA @ 500")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "135", OrdType: fix.OrdTypeLimit, LimitPrice: "500"})
 
-	waitNext(r, "Scenario 45: Notional GTC Buy $150 TSLA @ 450 LMT")
+	waitNext(r, "Scenario: Notional GTC Buy $150 TSLA @ 450 LMT")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "150", OrdType: fix.OrdTypeLimit, LimitPrice: "450", TIF: fix.TimeInForceGTC})
 
-	waitNext(r, "Scenario 46: Cancel Notional Order")
+	waitNext(r, "Scenario: Cancel Notional Order")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "175", OrdType: fix.OrdTypeMarket})
 	waitNext(r, "Confirm Cancel Notional")
 	app.SendCancelOrder()
 
-	waitNext(r, "Scenario 47: Replace Notional Order")
+	waitNext(r, "Scenario: Replace Notional Order")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "180", OrdType: fix.OrdTypeMarket})
 	waitNext(r, "Confirm Replace Notional")
 	app.SendReplaceOrder("180", fix.OrdTypeMarket, "")
