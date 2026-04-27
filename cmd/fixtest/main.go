@@ -14,7 +14,7 @@ import (
 )
 
 // testDelay is the duration to pause between sending test orders in automatic mode.
-const testDelay = 1 * time.Second
+const testDelay = 2 * time.Second
 
 // Global variable for interactive mode, set via flag.
 var interactiveMode bool
