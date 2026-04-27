@@ -183,13 +183,13 @@ func (a *Application) SendOrder(p OrderParams) string {
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
 	a.LastClOrdID = clOrdID
 
-	// Symbology handling for Suffixes (e.g., BRK.B)
-	if strings.Contains(p.Symbol, ".") {
-		parts := strings.Split(p.Symbol, ".")
-		msg.Body.SetField(TagSymbol, quickfix.FIXString(parts[0]))
-		msg.Body.SetField(TagSymbolSfx, quickfix.FIXString(parts[1]))
-	} else {
-		msg.Body.SetField(TagSymbol, quickfix.FIXString(p.Symbol))
+	// Symbology handling for suffixes, e.g. BRK.B
+	symbol, symbolSfx, hasSfx := strings.Cut(p.Symbol, ".")
+
+	msg.Body.SetField(TagSymbol, quickfix.FIXString(symbol))
+
+	if hasSfx && symbolSfx != "" {
+		msg.Body.SetField(TagSymbolSfx, quickfix.FIXString(symbolSfx))
 	}
 
 	msg.Body.SetField(TagSide, quickfix.FIXString(p.Side))
