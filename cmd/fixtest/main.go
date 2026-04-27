@@ -90,15 +90,17 @@ func main() {
 
 // waitNext handles the pause between cases, supporting both automatic delay and interactive mode.
 func waitNext(reader *bufio.Reader, scenarioName string) {
-	time.Sleep(testDelay)
+	log.Println(scenarioName)
 	if interactiveMode {
-		fmt.Printf("\n[INTERACTIVE] Press ENTER to run: %s", scenarioName)
+		fmt.Printf("[INTERACTIVE] Press ENTER to run next step...")
 		_, _ = reader.ReadString('\n')
+	} else {
+		time.Sleep(testDelay)
 	}
 }
 
 func testSides(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: SIDES ---")
+	waitNext(r, "--- Group: SIDES ---")
 	waitNext(r, "Scenario 1: Buy AAPL MKT")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay})
 
@@ -110,7 +112,7 @@ func testSides(app *fix.Application, r *bufio.Reader) {
 }
 
 func testOrderTypes(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: ORDER TYPE ---")
+	waitNext(r, "--- Group: ORDER TYPE ---")
 	waitNext(r, "Scenario 4: MKT - Buy 1 AAPL")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay})
 
@@ -128,7 +130,7 @@ func testOrderTypes(app *fix.Application, r *bufio.Reader) {
 }
 
 func testExecInst(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: EXEC INST ---")
+	waitNext(r, "--- Group: EXEC INST ---")
 	waitNext(r, "Scenario 10: Not Held - Buy 100 BKNG MKT")
 	app.SendOrder(fix.OrderParams{Symbol: "BKNG", Side: fix.SideBuy, Qty: "100", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, ExecInst: fix.ExecInstNotHeld})
 
@@ -137,13 +139,13 @@ func testExecInst(app *fix.Application, r *bufio.Reader) {
 }
 
 func testSymbology(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: SYMBOLOGY ---")
+	waitNext(r, "--- Group: SYMBOLOGY ---")
 	waitNext(r, "Scenario 12: Symbol Suffix - Buy 1 BRK.B @ 500 STP")
 	app.SendOrder(fix.OrderParams{Symbol: "BRK.B", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeStop, StopPrice: "500", TIF: fix.TimeInForceDay})
 }
 
 func testTIF(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: TIF ---")
+	waitNext(r, "--- Group: TIF ---")
 	waitNext(r, "Scenario 13: TIF Day - Buy 1 AAPL MKT")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay})
 
@@ -158,7 +160,7 @@ func testTIF(app *fix.Application, r *bufio.Reader) {
 }
 
 func testSettlement(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: SETTLEMENT ---")
+	waitNext(r, "--- Group: SETTLEMENT ---")
 	waitNext(r, "Scenario 17: Regular")
 	app.SendOrder(fix.OrderParams{Symbol: "AAPL", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeMarket, TIF: fix.TimeInForceDay, SettlTyp: fix.SettlmntTypRegular})
 
@@ -191,63 +193,63 @@ func testSettlement(app *fix.Application, r *bufio.Reader) {
 }
 
 func testFractional(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: FRACTIONAL ---")
-	waitNext(r, "Scenario: Fractional MKT Buy .25 AMZN")
+	waitNext(r, "--- Group: FRACTIONAL ---")
+	waitNext(r, "Scenario 38: Fractional MKT Buy .25 AMZN")
 	app.SendOrder(fix.OrderParams{Symbol: "AMZN", Side: fix.SideBuy, Qty: ".25", OrdType: fix.OrdTypeMarket, IsFractional: true})
 
-	waitNext(r, "Scenario: Fractional LMT Buy .99 TSLA @ 400")
+	waitNext(r, "Scenario 39: Fractional LMT Buy .99 TSLA @ 400")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Qty: ".99", OrdType: fix.OrdTypeLimit, LimitPrice: "400", IsFractional: true})
 
-	waitNext(r, "Scenario: Fractional GTC Buy .50 TSLA @ 401 LMT GTC")
+	waitNext(r, "Scenario 40: Fractional GTC Buy .50 TSLA @ 401 LMT GTC")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Qty: ".50", OrdType: fix.OrdTypeLimit, LimitPrice: "401", TIF: fix.TimeInForceGTC, IsFractional: true})
 
-	waitNext(r, "Scenario: Cancel Fractional Order")
+	waitNext(r, "Scenario 41: Cancel Fractional Order")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Qty: ".50", OrdType: fix.OrdTypeLimit, LimitPrice: "401", TIF: fix.TimeInForceGTC, IsFractional: true})
 	waitNext(r, "Confirm Cancel Fractional")
 	app.SendCancelOrder()
 
-	waitNext(r, "Scenario: Replace Fractional Order")
+	waitNext(r, "Scenario 42: Replace Fractional Order")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Qty: ".10", OrdType: fix.OrdTypeLimit, LimitPrice: "402", IsFractional: true})
 	waitNext(r, "Confirm Replace Fractional")
 	app.SendReplaceOrder(".10", fix.OrdTypeLimit, "403")
 }
 
 func testNotional(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: NOTIONAL ---")
-	waitNext(r, "Scenario: Notional MKT Buy $100 TSLA")
+	waitNext(r, "--- Group: NOTIONAL ---")
+	waitNext(r, "Scenario 43: Notional MKT Buy $100 TSLA")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "100", OrdType: fix.OrdTypeMarket})
 
-	waitNext(r, "Scenario: Notional LMT Buy $135 TSLA @ 500")
+	waitNext(r, "Scenario 44: Notional LMT Buy $135 TSLA @ 500")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "135", OrdType: fix.OrdTypeLimit, LimitPrice: "500"})
 
-	waitNext(r, "Scenario: Notional GTC Buy $150 TSLA @ 450 LMT")
+	waitNext(r, "Scenario 45: Notional GTC Buy $150 TSLA @ 450 LMT")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "150", OrdType: fix.OrdTypeLimit, LimitPrice: "450", TIF: fix.TimeInForceGTC})
 
-	waitNext(r, "Scenario: Cancel Notional Order")
+	waitNext(r, "Scenario 46: Cancel Notional Order")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "175", OrdType: fix.OrdTypeMarket})
 	waitNext(r, "Confirm Cancel Notional")
 	app.SendCancelOrder()
 
-	waitNext(r, "Scenario: Replace Notional Order")
+	waitNext(r, "Scenario 47: Replace Notional Order")
 	app.SendOrder(fix.OrderParams{Symbol: "TSLA", Side: fix.SideBuy, Notional: "180", OrdType: fix.OrdTypeMarket})
 	waitNext(r, "Confirm Replace Notional")
 	app.SendReplaceOrder("180", fix.OrdTypeMarket, "")
 }
 
 func testExtendedHours(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: EXTENDED HOURS ---")
-	waitNext(r, "Scenario: AM Only DIA")
+	waitNext(r, "--- Group: EXTENDED HOURS ---")
+	waitNext(r, "Scenario 48: AM Only DIA")
 	app.SendOrder(fix.OrderParams{Symbol: "DIA", Side: fix.SideBuy, Qty: "1", OrdType: fix.OrdTypeLimit, LimitPrice: "450", TradingSes: fix.TradingSessionAM})
 
-	waitNext(r, "Scenario: PM Only DIA")
+	waitNext(r, "Scenario 49: PM Only DIA")
 	app.SendOrder(fix.OrderParams{Symbol: "DIA", Side: fix.SideBuy, Qty: "2", OrdType: fix.OrdTypeLimit, LimitPrice: "451", TradingSes: fix.TradingSessionPM})
 
-	waitNext(r, "Scenario: All Sessions DIA")
+	waitNext(r, "Scenario 50: All Sessions DIA")
 	app.SendOrder(fix.OrderParams{Symbol: "DIA", Side: fix.SideBuy, Qty: "3", OrdType: fix.OrdTypeLimit, LimitPrice: "452", TradingSes: fix.TradingSessionBoth})
 }
 
 func testMisc(app *fix.Application, r *bufio.Reader) {
-	log.Println("--- Group: MISC SCENARIOS ---")
+	waitNext(r, "--- Group: MISC SCENARIOS ---")
 	waitNext(r, "Scenario 27: Partial Fill & Cancel - Buy 1600 LCID MKT")
 	app.SendOrder(fix.OrderParams{Symbol: "LCID", Side: fix.SideBuy, Qty: "1600", OrdType: fix.OrdTypeMarket})
 	waitNext(r, "Confirm Cancel Partial")
