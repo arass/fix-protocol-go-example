@@ -3,7 +3,9 @@ package fix
 import (
 	"fmt"
 	"log"
+	"math"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -226,6 +228,12 @@ func (a *Application) SendOrder(p OrderParams) string {
 
 	if p.IsFractional {
 		msg.Header.SetField(TagTargetSubID, quickfix.FIXString("FRAC"))
+		msg.Header.SetField(TagTargetRaptorFractional, quickfix.FIXString(p.Qty))
+		// Round the qty up
+		if qtyFloat, err := strconv.ParseFloat(p.Qty, 64); err == nil {
+			roundedQty := math.Ceil(qtyFloat)
+			msg.Body.SetField(TagOrderQty, quickfix.FIXString(fmt.Sprintf("%.0f", roundedQty)))
+		}
 	}
 
 	if p.TradingSes != "" {
