@@ -239,8 +239,6 @@ func (a *Application) SendOrder(p OrderParams) string {
 	// This is an RQD specific thing. May need it removed for other counterparties.
 	if p.TradingSes != "" {
 		msg.Body.SetField(TagTradingSessionID, quickfix.FIXString(p.TradingSes))
-	} else {
-		msg.Body.SetField(TagTradingSessionID, quickfix.FIXString(TradingSessionBoth))
 	}
 
 	// Special handling for Sell Short (Side=5)
