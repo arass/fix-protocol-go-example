@@ -60,7 +60,7 @@ func (a *Application) OnLogon(sessionID quickfix.SessionID) {
 	// message processing loop. We wait 1 second to ensure everything is ready.
 	go func() {
 		time.Sleep(1 * time.Second)
-		a.SendOrder(OrderParams{Symbol: "AAPL", Side: SideBuy, Qty: "100", OrdType: OrdTypeMarket, TIF: TimeInForceDay})
+		a.SendOrder(OrderParams{Symbol: "AAPL", Side: SideBuy, Qty: "100", OrdType: OrdTypeMarket, TIF: TimeInForceDay, TradingSes: TradingSessionBoth})
 
 		// Wait 3 seconds, then request status
 		time.Sleep(3 * time.Second)
@@ -148,18 +148,24 @@ func (a *Application) FromApp(msg *quickfix.Message, sessionID quickfix.SessionI
 
 // OrderParams is a helper struct to avoid long parameter lists in SendOrder
 type OrderParams struct {
-	Symbol       string
-	Side         string
-	Qty          string
-	OrdType      string
-	LimitPrice   string
-	StopPrice    string
-	TIF          string
-	ExecInst     string
-	SettlTyp     string
-	IsFractional bool
-	Notional     string
-	TradingSes   string
+	Symbol             string
+	SecurityType       string // Tag 167
+	MaturityMonthYear  string // Tag 200 (YYYYMM)
+	MaturityDay        string // Tag 205 (DD)
+	PutOrCall          string // Tag 201 (0=Put, 1=Call)
+	StrikePrice        string // Tag 202
+	ContractMultiplier string // Tag 231
+	Side               string
+	Qty                string
+	OrdType            string
+	LimitPrice         string
+	StopPrice          string
+	TIF                string
+	ExecInst           string
+	SettlTyp           string
+	IsFractional       bool
+	Notional           string
+	TradingSes         string // Tag 336
 }
 
 // SendOrder constructs and sends a "New Order Single" message to the server.
@@ -194,7 +200,28 @@ func (a *Application) SendOrder(p OrderParams) string {
 		msg.Body.SetField(TagSymbolSfx, quickfix.FIXString(symbolSfx))
 	}
 
+	// Options Specific Fields
+	if p.SecurityType != "" {
+		msg.Body.SetField(TagSecurityType, quickfix.FIXString(p.SecurityType))
+		if p.MaturityMonthYear != "" {
+			msg.Body.SetField(TagMaturityMonthYear, quickfix.FIXString(p.MaturityMonthYear))
+		}
+		if p.MaturityDay != "" {
+			msg.Body.SetField(TagMaturityDay, quickfix.FIXString(p.MaturityDay))
+		}
+		if p.PutOrCall != "" {
+			msg.Body.SetField(TagPutOrCall, quickfix.FIXString(p.PutOrCall))
+		}
+		if p.StrikePrice != "" {
+			msg.Body.SetField(TagStrikePrice, quickfix.FIXString(p.StrikePrice))
+		}
+		if p.ContractMultiplier != "" {
+			msg.Body.SetField(TagContractMultiplier, quickfix.FIXString(p.ContractMultiplier))
+		}
+	}
+
 	msg.Body.SetField(TagSide, quickfix.FIXString(p.Side))
+	// Standardized format for TransactTime
 	msg.Body.SetField(TagTransactTime, quickfix.FIXString(time.Now().Format("20060102-15:04:05.000")))
 
 	// Handling Quantity vs Notional
@@ -228,8 +255,9 @@ func (a *Application) SendOrder(p OrderParams) string {
 
 	if p.IsFractional {
 		msg.Header.SetField(TagTargetSubID, quickfix.FIXString("FRAC"))
+		// Raptor-specific fractional quantity tag
 		msg.Header.SetField(TagTargetRaptorFractional, quickfix.FIXString(p.Qty))
-		// Round the qty up
+		// Round the qty up for Tag 38 if fractional, as Tag 38 expects integer for standard FIX
 		if qtyFloat, err := strconv.ParseFloat(p.Qty, 64); err == nil {
 			roundedQty := math.Ceil(qtyFloat)
 			msg.Body.SetField(TagOrderQty, quickfix.FIXString(fmt.Sprintf("%.0f", roundedQty)))

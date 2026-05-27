@@ -16,6 +16,12 @@ const (
 	TagClOrdID                quickfix.Tag = 11    // Client Order ID (Unique ID we assign)
 	TagSymbol                 quickfix.Tag = 55    // The thing we are trading (e.g., EUR/USD)
 	TagSymbolSfx              quickfix.Tag = 65    // Suffix for the symbol
+	TagSecurityType           quickfix.Tag = 167   // Type of security (e.g., OPT for Option)
+	TagMaturityMonthYear      quickfix.Tag = 200   // Options: Expiration month and year (YYYYMM)
+	TagMaturityDay            quickfix.Tag = 205   // Options: Expiration day (DD)
+	TagPutOrCall              quickfix.Tag = 201   // Options: Put (0) or Call (1)
+	TagStrikePrice            quickfix.Tag = 202   // Options: Strike Price
+	TagContractMultiplier     quickfix.Tag = 231   // Options: Number of units of underlying per contract
 	TagSide                   quickfix.Tag = 54    // Buy (1) or Sell (2)
 	TagTransactTime           quickfix.Tag = 60    // Time the order was sent
 	TagOrderQty               quickfix.Tag = 38    // How many units to buy/sell
@@ -43,7 +49,8 @@ const (
 	TagLocateReqd             quickfix.Tag = 114   // Locate Required (for Short Sales)
 	TagLocateID               quickfix.Tag = 5700  // Locate ID (Custom/Specific tag often used for SS)
 	TagCashOrderQty           quickfix.Tag = 152   // Notional Order Quantity (Tag 152)
-	TagTradingSessionID       quickfix.Tag = 336   // Trading Session ID (Tag 336)
+	// TagTradingSessionID (336) is an RQD-specific tag used to control extended hours trading.
+	TagTradingSessionID quickfix.Tag = 336 // Trading Session ID (Tag 336)
 
 	// Message Types (Values for Tag 35)
 	MsgTypeLogon               = "A" // Connection established
@@ -68,6 +75,13 @@ const (
 	OrdTypeStopLimit     = "4" // Value '4' means Stop Limit Order
 	OrdTypeMarketOnClose = "5" // Value '5' means Market On Close
 	OrdTypeLimitOnClose  = "B" // Value 'B' means Limit On Close
+
+	// SecurityType Values (Tag 167)
+	SecurityTypeOption = "OPT" // Value 'OPT' means Option
+
+	// PutOrCall Values (Tag 201)
+	PutOrCallPut  = "0" // Value '0' means Put Option
+	PutOrCallCall = "1" // Value '1' means Call Option
 
 	// Rule80A Values (Tag 47 - Account Type)
 	Rule80AAgency    = "A" // Agency
@@ -94,7 +108,7 @@ const (
 	ExecTransTypeCancel  = "1" // Cancel (Bust)
 	ExecTransTypeCorrect = "2" // Correct (Price Correct)
 
-	// TradingSessionID Values (Tag 336)
+	// TradingSessionID Values (Tag 336) - RQD Specific
 	TradingSessionAM   = "1" // AM Only
 	TradingSessionPM   = "2" // PM Only
 	TradingSessionBoth = "3" // All Sessions

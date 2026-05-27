@@ -78,6 +78,7 @@ func main() {
 	testFractional(app, reader)
 	testNotional(app, reader)
 	testExtendedHours(app, reader)
+	testOptions(app, reader) // New options test group
 	testMisc(app, reader)
 
 	// 6. Keep running for a few seconds to see final responses
@@ -246,6 +247,41 @@ func testExtendedHours(app *fix.Application, r *bufio.Reader) {
 
 	waitNext(r, "Scenario 50: All Sessions DIA")
 	app.SendOrder(fix.OrderParams{Symbol: "DIA", Side: fix.SideBuy, Qty: "3", OrdType: fix.OrdTypeLimit, LimitPrice: "452", TradingSes: fix.TradingSessionBoth})
+}
+
+func testOptions(app *fix.Application, r *bufio.Reader) {
+	waitNext(r, "--- Group: OPTIONS ---")
+	waitNext(r, "Scenario 51: Buy META Call Option (20260522, Strike 595)")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "META",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202605",
+		MaturityDay:        "22",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "595",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeMarket,
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+	})
+	waitNext(r, "Scenario 52: Sell META Put Option (20260522, Strike 595)")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "META",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202605",
+		MaturityDay:        "22",
+		PutOrCall:          fix.PutOrCallPut,
+		StrikePrice:        "595",
+		ContractMultiplier: "100",
+		Side:               fix.SideSell,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeLimit,
+		LimitPrice:         "1.50",
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+	})
 }
 
 func testMisc(app *fix.Application, r *bufio.Reader) {
