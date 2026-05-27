@@ -265,6 +265,7 @@ func testOptions(app *fix.Application, r *bufio.Reader) {
 		OrdType:            fix.OrdTypeMarket,
 		TIF:                fix.TimeInForceDay,
 		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
 	})
 	waitNext(r, "Scenario 52: Sell META Put Option (20260522, Strike 595)")
 	app.SendOrder(fix.OrderParams{
@@ -281,6 +282,7 @@ func testOptions(app *fix.Application, r *bufio.Reader) {
 		LimitPrice:         "1.50",
 		TIF:                fix.TimeInForceDay,
 		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseClose,
 	})
 }
 

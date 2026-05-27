@@ -33,6 +33,7 @@ const (
 	TagSettlmntTyp            quickfix.Tag = 63    // Settlement Type (Tag 63)
 	TagTargetSubID            quickfix.Tag = 57    // Target Sub ID (Used for FRAC indicator)
 	TagTargetRaptorFractional quickfix.Tag = 20038 // Raptor wants 20038 to provide actual fractional shares
+	TagOpenClose              quickfix.Tag = 77    // Indicates if the order is to open or close a position
 	TagExecInst               quickfix.Tag = 18    // Instructions for order handling (Not Held, etc.)
 	TagExecTransType          quickfix.Tag = 20    // Execution Transaction Type (Tag 20)
 	TagExecType               quickfix.Tag = 150   // What happened to the order? (New, Filled, etc.)
@@ -82,6 +83,10 @@ const (
 	// PutOrCall Values (Tag 201)
 	PutOrCallPut  = "0" // Value '0' means Put Option
 	PutOrCallCall = "1" // Value '1' means Call Option
+
+	// OpenClose Values (Tag 77)
+	OpenCloseOpen  = "0" // Value '0' means Open position
+	OpenCloseClose = "C" // Value 'C' means Close position (as per sample)
 
 	// Rule80A Values (Tag 47 - Account Type)
 	Rule80AAgency    = "A" // Agency

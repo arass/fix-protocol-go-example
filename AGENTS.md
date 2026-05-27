@@ -44,6 +44,7 @@
 - CLI-first unless UI is requested
 - Use config files where appropriate for sessions, connections, and environment-specific settings
 - Do not hardcode secrets unless explicitly asked
+- Do not change architecture in place unless I ask
 
 ## Error Handling
 - Include basic logging

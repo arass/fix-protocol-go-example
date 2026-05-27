@@ -148,24 +148,28 @@ func (a *Application) FromApp(msg *quickfix.Message, sessionID quickfix.SessionI
 
 // OrderParams is a helper struct to avoid long parameter lists in SendOrder
 type OrderParams struct {
-	Symbol             string
+	Symbol string
+
+	// Options-Specific
 	SecurityType       string // Tag 167
 	MaturityMonthYear  string // Tag 200 (YYYYMM)
 	MaturityDay        string // Tag 205 (DD)
 	PutOrCall          string // Tag 201 (0=Put, 1=Call)
 	StrikePrice        string // Tag 202
 	ContractMultiplier string // Tag 231
-	Side               string
-	Qty                string
-	OrdType            string
-	LimitPrice         string
-	StopPrice          string
-	TIF                string
-	ExecInst           string
-	SettlTyp           string
-	IsFractional       bool
-	Notional           string
-	TradingSes         string // Tag 336
+	OpenClose          string // Tag 77
+
+	Side         string
+	Qty          string
+	OrdType      string
+	LimitPrice   string
+	StopPrice    string
+	TIF          string
+	ExecInst     string
+	SettlTyp     string
+	IsFractional bool
+	Notional     string
+	TradingSes   string // Tag 336
 }
 
 // SendOrder constructs and sends a "New Order Single" message to the server.
@@ -218,6 +222,11 @@ func (a *Application) SendOrder(p OrderParams) string {
 		if p.ContractMultiplier != "" {
 			msg.Body.SetField(TagContractMultiplier, quickfix.FIXString(p.ContractMultiplier))
 		}
+		// OpenClose (Tag 77) - Defaults to OpenCloseOpen if not provided
+		if p.OpenClose != "" {
+			msg.Body.SetField(TagOpenClose, quickfix.FIXString(p.OpenClose))
+		}
+
 	}
 
 	msg.Body.SetField(TagSide, quickfix.FIXString(p.Side))
