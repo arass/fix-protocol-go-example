@@ -85,7 +85,7 @@ const (
 	PutOrCallCall = "1" // Value '1' means Call Option
 
 	// OpenClose Values (Tag 77)
-	OpenCloseOpen  = "0" // Value '0' means Open position
+	OpenCloseOpen  = "O" // Value 'O' means Open position
 	OpenCloseClose = "C" // Value 'C' means Close position (as per sample)
 
 	// Rule80A Values (Tag 47 - Account Type)
