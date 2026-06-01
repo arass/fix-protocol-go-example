@@ -92,12 +92,13 @@ func main() {
 
 // waitNext handles the pause between cases, supporting both automatic delay and interactive mode.
 func waitNext(reader *bufio.Reader, scenarioName string) {
-	log.Println(scenarioName)
 	if interactiveMode {
+		log.Println(scenarioName)
 		fmt.Printf("[INTERACTIVE] Press ENTER to run next step...")
 		_, _ = reader.ReadString('\n')
 	} else {
 		time.Sleep(testDelay)
+		log.Println(scenarioName)
 	}
 }
 
