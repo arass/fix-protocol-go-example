@@ -79,6 +79,7 @@ func main() {
 	testNotional(app, reader)
 	testExtendedHours(app, reader)
 	testOptions(app, reader) // New options test group
+	testOptionsRQD(app, reader)
 	testMisc(app, reader)
 
 	// 6. Keep running for a few seconds to see final responses
@@ -280,6 +281,259 @@ func testOptions(app *fix.Application, r *bufio.Reader) {
 		Qty:                "1",
 		OrdType:            fix.OrdTypeLimit,
 		LimitPrice:         "1.50",
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseClose,
+	})
+}
+
+func testOptionsRQD(app *fix.Application, r *bufio.Reader) {
+	waitNext(r, "--- Group: OPTIONS RQD ---")
+
+	waitNext(r, "Scenario 53 / S-001: BTO AAPL 20260717 270 Call MKT DAY")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "AAPL",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "270",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeMarket,
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 54 / S-002: BTO AAPL 20260717 275 Call LMT 4.20 DAY")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "AAPL",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "275",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeLimit,
+		LimitPrice:         "4.20",
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 55 / S-003: BTO NVDA 20260717 215 Call LMT 8.50 GTC")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "NVDA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "215",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "5",
+		OrdType:            fix.OrdTypeLimit,
+		LimitPrice:         "8.50",
+		TIF:                fix.TimeInForceGTC,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 56 / S-004: BTO NVDA 20260717 215 Call STP 19 DAY")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "NVDA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "215",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeStop,
+		StopPrice:          "19",
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 57 / S-005: BTO TSLA 20260717 380 Call STPLMT 6.50/6.75 DAY")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "TSLA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "380",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeStopLimit,
+		StopPrice:          "6.50",
+		LimitPrice:         "6.75",
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 58 / S-006: BTO AAPL 20260717 270 Call MKT DAY Qty 2")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "AAPL",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "270",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "2",
+		OrdType:            fix.OrdTypeMarket,
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 59 / S-007: BTO NVDA 20260717 220 Call LMT 5 GTC Qty 10")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "NVDA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "220",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "10",
+		OrdType:            fix.OrdTypeLimit,
+		LimitPrice:         "5",
+		TIF:                fix.TimeInForceGTC,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 60 / S-008: BTO TSLA 20260717 380 Call LMT 0.25 DAY then cancel")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "TSLA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "380",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeLimit,
+		LimitPrice:         "0.25",
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+	waitNext(r, "Scenario 60 / S-008: Cancel TSLA option order")
+	app.SendCancelOrder()
+
+	waitNext(r, "Scenario 61 / S-009: STO NVDA 20260717 215 Put MKT DAY")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "NVDA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallPut,
+		StrikePrice:        "215",
+		ContractMultiplier: "100",
+		Side:               fix.SideSell,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeMarket,
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 62 / S-010: STO NVDA 20260717 215 Put LMT 4 DAY")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "NVDA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallPut,
+		StrikePrice:        "215",
+		ContractMultiplier: "100",
+		Side:               fix.SideSell,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeLimit,
+		LimitPrice:         "4",
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 63 / S-011: STO TSLA 20260717 370 Put LMT 35 GTC")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "TSLA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallPut,
+		StrikePrice:        "370",
+		ContractMultiplier: "100",
+		Side:               fix.SideSell,
+		Qty:                "2",
+		OrdType:            fix.OrdTypeLimit,
+		LimitPrice:         "35",
+		TIF:                fix.TimeInForceGTC,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 64 / S-012: STO SPY 20260717 705 Put MKT DAY Qty 5")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "SPY",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallPut,
+		StrikePrice:        "705",
+		ContractMultiplier: "100",
+		Side:               fix.SideSell,
+		Qty:                "5",
+		OrdType:            fix.OrdTypeMarket,
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseOpen,
+	})
+
+	waitNext(r, "Scenario 65 / S-013: BTC NVDA 20260717 215 Put MKT DAY")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "NVDA",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallPut,
+		StrikePrice:        "215",
+		ContractMultiplier: "100",
+		Side:               fix.SideBuy,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeMarket,
+		TIF:                fix.TimeInForceDay,
+		TradingSes:         fix.TradingSessionBoth,
+		OpenClose:          fix.OpenCloseClose,
+	})
+
+	waitNext(r, "Scenario 66 / S-014: STC AAPL 20260717 270 Call MKT DAY")
+	app.SendOrder(fix.OrderParams{
+		Symbol:             "AAPL",
+		SecurityType:       fix.SecurityTypeOption,
+		MaturityMonthYear:  "202607",
+		MaturityDay:        "17",
+		PutOrCall:          fix.PutOrCallCall,
+		StrikePrice:        "270",
+		ContractMultiplier: "100",
+		Side:               fix.SideSell,
+		Qty:                "1",
+		OrdType:            fix.OrdTypeMarket,
 		TIF:                fix.TimeInForceDay,
 		TradingSes:         fix.TradingSessionBoth,
 		OpenClose:          fix.OpenCloseClose,
