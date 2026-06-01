@@ -8,6 +8,11 @@ import "github.com/quickfixgo/quickfix"
 // FIX messages use integer "Tags" to identify fields (e.g., Tag 35 is MsgType).
 // We define them here to avoid needing complex external imports and to make
 // the code easier to read.
+//
+// if you want to use library-supplied constants, just import:
+// "github.com/quickfixgo/quickfix"
+// "github.com/quickfixgo/tag"
+// "github.com/quickfixgo/enum"
 // -----------------------------------------------------------------------------
 
 const (
