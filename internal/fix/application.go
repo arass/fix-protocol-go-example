@@ -188,8 +188,12 @@ func (a *Application) SendOrder(p OrderParams) string {
 	}
 	msg.Body.SetField(TagAccount, quickfix.FIXString(account))
 
-	// All orders marked as Agency (Tag 47=A)
-	msg.Body.SetField(TagRule80A, quickfix.FIXString(Rule80AAgency))
+	// Most orders are marked as Agency (Tag 47=A).
+	// RQD asked us to omit Tag 47 entirely for options orders, so we only set
+	// it when this is not an options order.
+	if p.SecurityType != SecurityTypeOption {
+		msg.Body.SetField(TagRule80A, quickfix.FIXString(Rule80AAgency))
+	}
 
 	clOrdID := fmt.Sprintf("ORD-%d", time.Now().UnixNano())
 	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
