@@ -80,6 +80,7 @@ func main() {
 	testExtendedHours(app, reader)
 	testOptions(app, reader) // New options test group
 	testOptionsRQD(app, reader)
+	testOptionsComplexRQD(app, reader)
 	testMisc(app, reader)
 
 	// 6. Keep running for a few seconds to see final responses
@@ -538,6 +539,209 @@ func testOptionsRQD(app *fix.Application, r *bufio.Reader) {
 		TIF:                fix.TimeInForceDay,
 		TradingSes:         fix.TradingSessionBoth,
 		OpenClose:          fix.OpenCloseClose,
+	})
+}
+
+func testOptionsComplexRQD(app *fix.Application, r *bufio.Reader) {
+	waitNext(r, "--- Group: OPTIONS COMPLEX RQD ---")
+
+	waitNext(r, "Scenario 67: NVDA Debit Call Spread - Buy 250 Call / Sell 275 Call for 3.00 debit")
+	app.SendMultilegOrder(fix.MultilegOrderParams{
+		Symbol:     "NVDA",
+		Side:       fix.SideBuy,
+		Qty:        "1",
+		OrdType:    fix.OrdTypeLimit,
+		Price:      "3.00",
+		TIF:        fix.TimeInForceDay,
+		TradingSes: fix.TradingSessionBoth,
+		Text:       "RQD Debit Spread: BTO 1 NVDA 20260717 250C, STO 1 NVDA 20260717 275C, net debit 3.00",
+		Legs: []fix.MultilegLegParams{
+			{
+				LegRefID:           "BTO-250C",
+				Symbol:             "NVDA",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodeCall,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "250",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideBuy,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+			{
+				LegRefID:           "STO-275C",
+				Symbol:             "NVDA",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodeCall,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "275",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideSell,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+		},
+	})
+
+	waitNext(r, "Scenario 68: AMZN Credit Put Spread - Sell 250 Put / Buy 240 Put for 4.00 credit")
+	app.SendMultilegOrder(fix.MultilegOrderParams{
+		Symbol:     "AMZN",
+		Side:       fix.SideSell,
+		Qty:        "1",
+		OrdType:    fix.OrdTypeLimit,
+		Price:      "4.00",
+		TIF:        fix.TimeInForceDay,
+		TradingSes: fix.TradingSessionBoth,
+		Text:       "RQD Credit Spread: STO 1 AMZN 20260717 250P, BTO 1 AMZN 20260717 240P, net credit 4.00",
+		Legs: []fix.MultilegLegParams{
+			{
+				LegRefID:           "STO-250P",
+				Symbol:             "AMZN",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodePut,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "250",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideSell,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+			{
+				LegRefID:           "BTO-240P",
+				Symbol:             "AMZN",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodePut,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "240",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideBuy,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+		},
+	})
+
+	waitNext(r, "Scenario 69: XLY Covered Call - Buy 100 XLY / Sell 1 117 Call MKT")
+	app.SendMultilegOrder(fix.MultilegOrderParams{
+		Symbol:     "XLY",
+		Side:       fix.SideBuy,
+		Qty:        "1",
+		OrdType:    fix.OrdTypeMarket,
+		TIF:        fix.TimeInForceDay,
+		TradingSes: fix.TradingSessionBoth,
+		Text:       "RQD Covered Call: Buy 100 XLY, STO 1 XLY 20260717 117C at market",
+		Legs: []fix.MultilegLegParams{
+			{
+				LegRefID:       "BUY-100-SH",
+				Symbol:         "XLY",
+				SecurityType:   fix.SecurityTypeCommon,
+				RatioQty:       "100",
+				Qty:            "100",
+				Side:           fix.SideBuy,
+				PositionEffect: fix.OpenCloseOpen,
+			},
+			{
+				LegRefID:           "STO-117C",
+				Symbol:             "XLY",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodeCall,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "117",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideSell,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+		},
+	})
+
+	waitNext(r, "Scenario 70: XLY Covered Call Roll - Buy close Jul 117 Call / Sell open Sep 117 Call for 4.50 debit")
+	app.SendMultilegOrder(fix.MultilegOrderParams{
+		Symbol:     "XLY",
+		Side:       fix.SideBuy,
+		Qty:        "1",
+		OrdType:    fix.OrdTypeLimit,
+		Price:      "4.50",
+		TIF:        fix.TimeInForceDay,
+		TradingSes: fix.TradingSessionBoth,
+		Text:       "RQD Roll: BTC 1 XLY 20260717 117C, STO 1 XLY 20260918 117C, net debit 4.50",
+		Legs: []fix.MultilegLegParams{
+			{
+				LegRefID:           "BTC-JUL-117C",
+				Symbol:             "XLY",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodeCall,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "117",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideBuy,
+				PositionEffect:     fix.OpenCloseClose,
+			},
+			{
+				LegRefID:           "STO-SEP-117C",
+				Symbol:             "XLY",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodeCall,
+				MaturityMonthYear:  "202609",
+				MaturityDate:       "20260918",
+				StrikePrice:        "117",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideSell,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+		},
+	})
+
+	waitNext(r, "Scenario 71: EWJ Married Put - Buy 100 EWJ / Buy 1 92 Put for 96.00 debit")
+	app.SendMultilegOrder(fix.MultilegOrderParams{
+		Symbol:     "EWJ",
+		Side:       fix.SideBuy,
+		Qty:        "1",
+		OrdType:    fix.OrdTypeLimit,
+		Price:      "96.00",
+		TIF:        fix.TimeInForceDay,
+		TradingSes: fix.TradingSessionBoth,
+		Text:       "RQD Married Put: Buy 100 EWJ, BTO 1 EWJ 20260717 92P, net debit 96.00",
+		Legs: []fix.MultilegLegParams{
+			{
+				LegRefID:       "BUY-100-SH",
+				Symbol:         "EWJ",
+				SecurityType:   fix.SecurityTypeCommon,
+				RatioQty:       "100",
+				Qty:            "100",
+				Side:           fix.SideBuy,
+				PositionEffect: fix.OpenCloseOpen,
+			},
+			{
+				LegRefID:           "BTO-92P",
+				Symbol:             "EWJ",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodePut,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "92",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideBuy,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+		},
 	})
 }
 

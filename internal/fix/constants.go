@@ -55,19 +55,35 @@ const (
 	TagLocateReqd             quickfix.Tag = 114   // Locate Required (for Short Sales)
 	TagLocateID               quickfix.Tag = 5700  // Locate ID (Custom/Specific tag often used for SS)
 	TagCashOrderQty           quickfix.Tag = 152   // Notional Order Quantity (Tag 152)
+	TagSpread                 quickfix.Tag = 218   // Net spread value for multi-leg strategies
+	TagNoLegs                 quickfix.Tag = 555   // Number of legs in a multi-leg order
+	TagLegPositionEffect      quickfix.Tag = 564   // Leg open/close indicator
+	TagLegPrice               quickfix.Tag = 566   // Optional price for one leg
+	TagLegSymbol              quickfix.Tag = 600   // Symbol for one leg in a multi-leg order
+	TagLegCFICode             quickfix.Tag = 608   // Leg CFI code; used here to indicate call vs put
+	TagLegSecurityType        quickfix.Tag = 609   // Leg security type, such as OPT or CS
+	TagLegMaturityMonthYear   quickfix.Tag = 610   // Leg option expiration month and year
+	TagLegMaturityDate        quickfix.Tag = 611   // Leg option expiration date
+	TagLegStrikePrice         quickfix.Tag = 612   // Leg option strike price
+	TagLegContractMultiplier  quickfix.Tag = 614   // Option contract multiplier for one leg
+	TagLegRatioQty            quickfix.Tag = 623   // Relative size of this leg
+	TagLegSide                quickfix.Tag = 624   // Side for this leg
+	TagLegRefID               quickfix.Tag = 654   // Human-readable client reference for one leg
+	TagLegQty                 quickfix.Tag = 687   // Actual quantity for one leg
 	// TagTradingSessionID (336) is an RQD-specific tag used to control extended hours trading.
 	TagTradingSessionID quickfix.Tag = 336 // Trading Session ID (Tag 336)
 
 	// Message Types (Values for Tag 35)
-	MsgTypeLogon               = "A" // Connection established
-	MsgTypeReject              = "3" // Session-level reject
-	MsgTypeExecutionReport     = "8" // Server telling us about an order change
-	MsgTypeOrderCancelReject   = "9" // Server rejected our request to cancel
-	MsgTypeNewOrderSingle      = "D" // We are sending a new order
-	MsgTypeOrderCancelRequest  = "F" // Request to cancel an existing order
-	MsgTypeOrderReplaceRequest = "G" // Request to modify an existing order
-	MsgTypeOrderStatusRequest  = "H" // Request for an order's current status
-	MsgTypeHeartBeat           = "0" // Heartbeat
+	MsgTypeLogon               = "A"  // Connection established
+	MsgTypeReject              = "3"  // Session-level reject
+	MsgTypeExecutionReport     = "8"  // Server telling us about an order change
+	MsgTypeOrderCancelReject   = "9"  // Server rejected our request to cancel
+	MsgTypeNewOrderSingle      = "D"  // We are sending a new order
+	MsgTypeOrderCancelRequest  = "F"  // Request to cancel an existing order
+	MsgTypeOrderReplaceRequest = "G"  // Request to modify an existing order
+	MsgTypeOrderStatusRequest  = "H"  // Request for an order's current status
+	MsgTypeNewOrderMultileg    = "AB" // We are sending one order with multiple tied legs
+	MsgTypeHeartBeat           = "0"  // Heartbeat
 
 	// Field Values (Tag 54 - Side)
 	SideBuy       = "1" // Value '1' means Buy
@@ -84,10 +100,15 @@ const (
 
 	// SecurityType Values (Tag 167)
 	SecurityTypeOption = "OPT" // Value 'OPT' means Option
+	SecurityTypeCommon = "CS"  // Value 'CS' means Common Stock
 
 	// PutOrCall Values (Tag 201)
 	PutOrCallPut  = "0" // Value '0' means Put Option
 	PutOrCallCall = "1" // Value '1' means Call Option
+
+	// LegCFICode Values (Tag 608)
+	LegCFICodeCall = "OC" // Option Call; used on option legs because FIX 4.4 has no LegPutOrCall tag
+	LegCFICodePut  = "OP" // Option Put; used on option legs because FIX 4.4 has no LegPutOrCall tag
 
 	// OpenClose Values (Tag 77)
 	OpenCloseOpen  = "O" // Value 'O' means Open position

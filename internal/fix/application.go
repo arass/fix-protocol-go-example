@@ -172,6 +172,41 @@ type OrderParams struct {
 	TradingSes   string // Tag 336
 }
 
+// MultilegOrderParams describes one multi-leg order, such as a vertical spread
+// or a stock-and-option combination. It keeps the same simple style as
+// OrderParams, but it has a slice of legs because one FIX message carries
+// several related instruments.
+type MultilegOrderParams struct {
+	Symbol     string // Top-level strategy symbol, usually the shared underlying symbol
+	Side       string // Top-level net side: Buy for debit orders, Sell for credit orders
+	Qty        string // Top-level strategy quantity, commonly "1" for one package
+	OrdType    string // Market or Limit for the package
+	Price      string // Net package price, such as "3.00" debit or "4.00" credit
+	TIF        string // Time in force for the package
+	TradingSes string // RQD trading session tag, when needed
+	Text       string // Human-readable label for logs and downstream OMS screens
+	Legs       []MultilegLegParams
+}
+
+// MultilegLegParams describes one leg inside a multi-leg order. Option legs use
+// SecurityType=OPT plus maturity/strike/CFI values. Equity legs use
+// SecurityType=CS and only need symbol, side, quantity, and ratio.
+type MultilegLegParams struct {
+	LegRefID           string // Short label such as BTO-250C to help identify the leg
+	Symbol             string // Leg symbol, usually the underlying symbol
+	SecurityType       string // OPT for option legs, CS for common stock legs
+	CFICode            string // OC for call, OP for put; blank for stock legs
+	MaturityMonthYear  string // Option expiration month, YYYYMM
+	MaturityDate       string // Option expiration date, YYYYMMDD
+	StrikePrice        string // Option strike price
+	ContractMultiplier string // Usually 100 for listed equity options
+	RatioQty           string // Relative package ratio, such as 1 or 100
+	Qty                string // Actual leg quantity, such as 1 contract or 100 shares
+	Side               string // Buy or Sell for this leg
+	PositionEffect     string // O for open, C for close
+	Price              string // Optional individual leg price
+}
+
 // SendOrder constructs and sends a "New Order Single" message to the server.
 func (a *Application) SendOrder(p OrderParams) string {
 	// 1. Create a new empty message
@@ -293,6 +328,119 @@ func (a *Application) SendOrder(p OrderParams) string {
 	err := quickfix.SendToTarget(msg, a.SessionID)
 	if err != nil {
 		log.Printf("Error: Failed to send order: %s", err)
+	}
+	return clOrdID
+}
+
+// SendMultilegOrder constructs and sends a FIX 4.4 NewOrderMultileg message.
+// This is used for strategies where the OMS should treat multiple legs as one
+// tied package, such as vertical spreads, covered calls, rolls, and married puts.
+func (a *Application) SendMultilegOrder(p MultilegOrderParams) string {
+	if len(p.Legs) == 0 {
+		log.Printf("Action: No legs provided for multi-leg order.")
+		return ""
+	}
+
+	// 1. Create a new empty message and mark it as NewOrderMultileg (35=AB).
+	msg := quickfix.NewMessage()
+	msg.Header.SetField(TagMsgType, quickfix.FIXString(MsgTypeNewOrderMultileg))
+
+	// 2. Add top-level fields that describe the whole package.
+	account := os.Getenv("ACCOUNT_NUMBER")
+	if account == "" {
+		account = "FIX-TEST-ACCOUNT-1"
+	}
+	msg.Body.SetField(TagAccount, quickfix.FIXString(account))
+
+	clOrdID := fmt.Sprintf("MLG-%d", time.Now().UnixNano())
+	msg.Body.SetField(TagClOrdID, quickfix.FIXString(clOrdID))
+	a.LastClOrdID = clOrdID
+
+	msg.Body.SetField(TagSymbol, quickfix.FIXString(p.Symbol))
+	msg.Body.SetField(TagSide, quickfix.FIXString(p.Side))
+	msg.Body.SetField(TagTransactTime, quickfix.FIXString(time.Now().Format("20060102-15:04:05.000")))
+	msg.Body.SetField(TagOrderQty, quickfix.FIXString(p.Qty))
+	msg.Body.SetField(TagOrdType, quickfix.FIXString(p.OrdType))
+
+	if p.Price != "" {
+		msg.Body.SetField(TagPrice, quickfix.FIXString(p.Price))
+	}
+	if p.TIF != "" {
+		msg.Body.SetField(TagTimeInForce, quickfix.FIXString(p.TIF))
+	}
+	if p.TradingSes != "" {
+		msg.Body.SetField(TagTradingSessionID, quickfix.FIXString(p.TradingSes))
+	}
+	if p.Text != "" {
+		msg.Body.SetField(TagText, quickfix.FIXString(p.Text))
+	}
+
+	// 3. Add the NoLegs repeating group. The template controls the order that
+	// quickfixgo writes fields inside each leg.
+	legs := quickfix.NewRepeatingGroup(
+		TagNoLegs,
+		quickfix.GroupTemplate{
+			quickfix.GroupElement(TagLegSymbol),
+			quickfix.GroupElement(TagLegSecurityType),
+			quickfix.GroupElement(TagLegCFICode),
+			quickfix.GroupElement(TagLegMaturityMonthYear),
+			quickfix.GroupElement(TagLegMaturityDate),
+			quickfix.GroupElement(TagLegStrikePrice),
+			quickfix.GroupElement(TagLegContractMultiplier),
+			quickfix.GroupElement(TagLegRatioQty),
+			quickfix.GroupElement(TagLegSide),
+			quickfix.GroupElement(TagLegQty),
+			quickfix.GroupElement(TagLegPositionEffect),
+			quickfix.GroupElement(TagLegRefID),
+			quickfix.GroupElement(TagLegPrice),
+		},
+	)
+
+	for _, legParams := range p.Legs {
+		leg := legs.Add()
+		leg.SetField(TagLegSymbol, quickfix.FIXString(legParams.Symbol))
+		leg.SetField(TagLegSecurityType, quickfix.FIXString(legParams.SecurityType))
+
+		if legParams.CFICode != "" {
+			leg.SetField(TagLegCFICode, quickfix.FIXString(legParams.CFICode))
+		}
+		if legParams.MaturityMonthYear != "" {
+			leg.SetField(TagLegMaturityMonthYear, quickfix.FIXString(legParams.MaturityMonthYear))
+		}
+		if legParams.MaturityDate != "" {
+			leg.SetField(TagLegMaturityDate, quickfix.FIXString(legParams.MaturityDate))
+		}
+		if legParams.StrikePrice != "" {
+			leg.SetField(TagLegStrikePrice, quickfix.FIXString(legParams.StrikePrice))
+		}
+		if legParams.ContractMultiplier != "" {
+			leg.SetField(TagLegContractMultiplier, quickfix.FIXString(legParams.ContractMultiplier))
+		}
+		if legParams.RatioQty != "" {
+			leg.SetField(TagLegRatioQty, quickfix.FIXString(legParams.RatioQty))
+		}
+		if legParams.Side != "" {
+			leg.SetField(TagLegSide, quickfix.FIXString(legParams.Side))
+		}
+		if legParams.Qty != "" {
+			leg.SetField(TagLegQty, quickfix.FIXString(legParams.Qty))
+		}
+		if legParams.PositionEffect != "" {
+			leg.SetField(TagLegPositionEffect, quickfix.FIXString(legParams.PositionEffect))
+		}
+		if legParams.LegRefID != "" {
+			leg.SetField(TagLegRefID, quickfix.FIXString(legParams.LegRefID))
+		}
+		if legParams.Price != "" {
+			leg.SetField(TagLegPrice, quickfix.FIXString(legParams.Price))
+		}
+	}
+	msg.Body.SetGroup(legs)
+
+	log.Printf("Action: Sending New Order Multileg (ID: %s, Symbol: %s, Legs: %d, Type: %s)...", clOrdID, p.Symbol, len(p.Legs), p.OrdType)
+	err := quickfix.SendToTarget(msg, a.SessionID)
+	if err != nil {
+		log.Printf("Error: Failed to send multi-leg order: %s", err)
 	}
 	return clOrdID
 }
