@@ -1,159 +1,138 @@
 package fix
 
-import "github.com/quickfixgo/quickfix"
+import (
+	"github.com/quickfixgo/enum"
+	"github.com/quickfixgo/quickfix"
+	"github.com/quickfixgo/tag"
+)
 
-// -----------------------------------------------------------------------------
-// CONSTANTS & TAGS
-// -----------------------------------------------------------------------------
-// FIX messages use integer "Tags" to identify fields (e.g., Tag 35 is MsgType).
-// We define them here to avoid needing complex external imports and to make
-// the code easier to read.
-//
-// if you want to use library-supplied constants, just import:
-// "github.com/quickfixgo/quickfix"
-// "github.com/quickfixgo/tag"
-// "github.com/quickfixgo/enum"
-// -----------------------------------------------------------------------------
+// This file keeps short, project-friendly names for the FIX tags and enum
+// values used by the app. Standard FIX values come from quickfixgo/tag and
+// quickfixgo/enum. Literal values below are local RQD/Raptor conventions.
 
 const (
-	// Standard FIX Tags (Field IDs)
-	TagMsgType                quickfix.Tag = 35    // Identifies the type of message (e.g., Order, Logon)
-	TagClOrdID                quickfix.Tag = 11    // Client Order ID (Unique ID we assign)
-	TagSymbol                 quickfix.Tag = 55    // The thing we are trading (e.g., EUR/USD)
-	TagSymbolSfx              quickfix.Tag = 65    // Suffix for the symbol
-	TagSecurityType           quickfix.Tag = 167   // Type of security (e.g., OPT for Option)
-	TagMaturityMonthYear      quickfix.Tag = 200   // Options: Expiration month and year (YYYYMM)
-	TagMaturityDay            quickfix.Tag = 205   // Options: Expiration day (DD)
-	TagPutOrCall              quickfix.Tag = 201   // Options: Put (0) or Call (1)
-	TagStrikePrice            quickfix.Tag = 202   // Options: Strike Price
-	TagContractMultiplier     quickfix.Tag = 231   // Options: Number of units of underlying per contract
-	TagSide                   quickfix.Tag = 54    // Buy (1) or Sell (2)
-	TagTransactTime           quickfix.Tag = 60    // Time the order was sent
-	TagOrderQty               quickfix.Tag = 38    // How many units to buy/sell
-	TagOrdType                quickfix.Tag = 40    // Market (1) or Limit (2)
-	TagPrice                  quickfix.Tag = 44    // Limit price
-	TagStopPx                 quickfix.Tag = 99    // Stop price
-	TagOrderID                quickfix.Tag = 37    // Server's Order ID
-	TagRule80A                quickfix.Tag = 47    // Account Type (Agency, Principal, etc. - Tag 47)
-	TagSettlmntTyp            quickfix.Tag = 63    // Settlement Type (Tag 63)
-	TagTargetSubID            quickfix.Tag = 57    // Target Sub ID (Used for FRAC indicator)
-	TagTargetRaptorFractional quickfix.Tag = 20038 // Raptor wants 20038 to provide actual fractional shares
-	TagOpenClose              quickfix.Tag = 77    // Indicates if the order is to open or close a position
-	TagExecInst               quickfix.Tag = 18    // Instructions for order handling (Not Held, etc.)
-	TagExecTransType          quickfix.Tag = 20    // Execution Transaction Type (Tag 20)
-	TagExecType               quickfix.Tag = 150   // What happened to the order? (New, Filled, etc.)
-	TagOrdStatus              quickfix.Tag = 39    // Current status of the order
-	TagCumQty                 quickfix.Tag = 14    // Total quantity filled so far
-	TagLeavesQty              quickfix.Tag = 151   // Quantity remaining to be filled
-	TagAvgPx                  quickfix.Tag = 6     // Average price of fills
-	TagText                   quickfix.Tag = 58    // Text description / reason
-	TagOrigClOrdID            quickfix.Tag = 41    // Original Order ID (for cancels/modifies)
-	TagRefSeqNum              quickfix.Tag = 45    // Reference message sequence number (for Rejects)
-	TagRefMsgType             quickfix.Tag = 372   // Reference message type (for Rejects)
-	TagAccount                quickfix.Tag = 1     // Account ID (e.g., Trading Account)
-	TagTimeInForce            quickfix.Tag = 59    // How long the order stays active
-	TagLocateReqd             quickfix.Tag = 114   // Locate Required (for Short Sales)
-	TagLocateID               quickfix.Tag = 5700  // Locate ID (Custom/Specific tag often used for SS)
-	TagCashOrderQty           quickfix.Tag = 152   // Notional Order Quantity (Tag 152)
-	TagSpread                 quickfix.Tag = 218   // Net spread value for multi-leg strategies
-	TagNoLegs                 quickfix.Tag = 555   // Number of legs in a multi-leg order
-	TagLegPositionEffect      quickfix.Tag = 564   // Leg open/close indicator
-	TagLegPrice               quickfix.Tag = 566   // Optional price for one leg
-	TagLegSymbol              quickfix.Tag = 600   // Symbol for one leg in a multi-leg order
-	TagLegCFICode             quickfix.Tag = 608   // Leg CFI code; used here to indicate call vs put
-	TagLegSecurityType        quickfix.Tag = 609   // Leg security type, such as OPT or CS
-	TagLegMaturityMonthYear   quickfix.Tag = 610   // Leg option expiration month and year
-	TagLegMaturityDate        quickfix.Tag = 611   // Leg option expiration date
-	TagLegStrikePrice         quickfix.Tag = 612   // Leg option strike price
-	TagLegContractMultiplier  quickfix.Tag = 614   // Option contract multiplier for one leg
-	TagLegRatioQty            quickfix.Tag = 623   // Relative size of this leg
-	TagLegSide                quickfix.Tag = 624   // Side for this leg
-	TagLegRefID               quickfix.Tag = 654   // Human-readable client reference for one leg
-	TagLegQty                 quickfix.Tag = 687   // Actual quantity for one leg
-	// TagTradingSessionID (336) is an RQD-specific tag used to control extended hours trading.
-	TagTradingSessionID quickfix.Tag = 336 // Trading Session ID (Tag 336)
+	TagMsgType               = tag.MsgType
+	TagClOrdID               = tag.ClOrdID
+	TagSymbol                = tag.Symbol
+	TagSymbolSfx             = tag.SymbolSfx
+	TagSecurityType          = tag.SecurityType
+	TagMaturityMonthYear     = tag.MaturityMonthYear
+	TagMaturityDay           = tag.MaturityDay
+	TagPutOrCall             = tag.PutOrCall
+	TagStrikePrice           = tag.StrikePrice
+	TagContractMultiplier    = tag.ContractMultiplier
+	TagSide                  = tag.Side
+	TagTransactTime          = tag.TransactTime
+	TagOrderQty              = tag.OrderQty
+	TagOrdType               = tag.OrdType
+	TagPrice                 = tag.Price
+	TagStopPx                = tag.StopPx
+	TagOrderID               = tag.OrderID
+	TagRule80A               = tag.Rule80A
+	TagSettlmntTyp           = tag.SettlmntTyp
+	TagTargetSubID           = tag.TargetSubID
+	TagOpenClose             = tag.OpenClose
+	TagExecInst              = tag.ExecInst
+	TagExecType              = tag.ExecType
+	TagOrdStatus             = tag.OrdStatus
+	TagCumQty                = tag.CumQty
+	TagLeavesQty             = tag.LeavesQty
+	TagAvgPx                 = tag.AvgPx
+	TagText                  = tag.Text
+	TagOrigClOrdID           = tag.OrigClOrdID
+	TagRefSeqNum             = tag.RefSeqNum
+	TagRefMsgType            = tag.RefMsgType
+	TagAccount               = tag.Account
+	TagTimeInForce           = tag.TimeInForce
+	TagLocateReqd            = tag.LocateReqd
+	TagCashOrderQty          = tag.CashOrderQty
+	TagTradingSessionID      = tag.TradingSessionID
+	TagNoLegs                = tag.NoLegs
+	TagLegPositionEffect     = tag.LegPositionEffect
+	TagLegPrice              = tag.LegPrice
+	TagLegSymbol             = tag.LegSymbol
+	TagLegCFICode            = tag.LegCFICode
+	TagLegSecurityType       = tag.LegSecurityType
+	TagLegMaturityMonthYear  = tag.LegMaturityMonthYear
+	TagLegMaturityDate       = tag.LegMaturityDate
+	TagLegStrikePrice        = tag.LegStrikePrice
+	TagLegContractMultiplier = tag.LegContractMultiplier
+	TagLegRatioQty           = tag.LegRatioQty
+	TagLegSide               = tag.LegSide
+	TagLegRefID              = tag.LegRefID
+	TagLegQty                = tag.LegQty
 
-	// Message Types (Values for Tag 35)
-	MsgTypeLogon               = "A"  // Connection established
-	MsgTypeReject              = "3"  // Session-level reject
-	MsgTypeExecutionReport     = "8"  // Server telling us about an order change
-	MsgTypeOrderCancelReject   = "9"  // Server rejected our request to cancel
-	MsgTypeNewOrderSingle      = "D"  // We are sending a new order
-	MsgTypeOrderCancelRequest  = "F"  // Request to cancel an existing order
-	MsgTypeOrderReplaceRequest = "G"  // Request to modify an existing order
-	MsgTypeOrderStatusRequest  = "H"  // Request for an order's current status
-	MsgTypeNewOrderMultileg    = "AB" // We are sending one order with multiple tied legs
-	MsgTypeHeartBeat           = "0"  // Heartbeat
+	TagLocateID               quickfix.Tag = 5700  // RQD locate ID for short-sale orders
+	TagTargetRaptorFractional quickfix.Tag = 20038 // Raptor fractional quantity tag
+)
 
-	// Field Values (Tag 54 - Side)
-	SideBuy       = "1" // Value '1' means Buy
-	SideSell      = "2" // Value '2' means Sell
-	SideSellShort = "5" // Value '5' means Sell Short
+const (
+	MsgTypeLogon               = string(enum.MsgType_LOGON)
+	MsgTypeReject              = string(enum.MsgType_REJECT)
+	MsgTypeExecutionReport     = string(enum.MsgType_EXECUTION_REPORT)
+	MsgTypeOrderCancelReject   = string(enum.MsgType_ORDER_CANCEL_REJECT)
+	MsgTypeNewOrderSingle      = string(enum.MsgType_ORDER_SINGLE)
+	MsgTypeOrderCancelRequest  = string(enum.MsgType_ORDER_CANCEL_REQUEST)
+	MsgTypeOrderReplaceRequest = string(enum.MsgType_ORDER_CANCEL_REPLACE_REQUEST)
+	MsgTypeOrderStatusRequest  = string(enum.MsgType_ORDER_STATUS_REQUEST)
+	MsgTypeNewOrderMultileg    = string(enum.MsgType_NEW_ORDER_MULTILEG)
+	MsgTypeHeartBeat           = string(enum.MsgType_HEARTBEAT)
+)
 
-	// Field Values (Tag 40 - OrdType)
-	OrdTypeMarket        = "1" // Value '1' means Market Order
-	OrdTypeLimit         = "2" // Value '2' means Limit Order
-	OrdTypeStop          = "3" // Value '3' means Stop Order
-	OrdTypeStopLimit     = "4" // Value '4' means Stop Limit Order
-	OrdTypeMarketOnClose = "5" // Value '5' means Market On Close
-	OrdTypeLimitOnClose  = "B" // Value 'B' means Limit On Close
+const (
+	SideBuy       = string(enum.Side_BUY)
+	SideSell      = string(enum.Side_SELL)
+	SideSellShort = string(enum.Side_SELL_SHORT)
 
-	// SecurityType Values (Tag 167)
-	SecurityTypeOption = "OPT" // Value 'OPT' means Option
-	SecurityTypeCommon = "CS"  // Value 'CS' means Common Stock
+	OrdTypeMarket        = string(enum.OrdType_MARKET)
+	OrdTypeLimit         = string(enum.OrdType_LIMIT)
+	OrdTypeStop          = string(enum.OrdType_STOP)
+	OrdTypeStopLimit     = string(enum.OrdType_STOP_LIMIT)
+	OrdTypeMarketOnClose = string(enum.OrdType_MARKET_ON_CLOSE)
+	OrdTypeLimitOnClose  = string(enum.OrdType_LIMIT_ON_CLOSE)
 
-	// PutOrCall Values (Tag 201)
-	PutOrCallPut  = "0" // Value '0' means Put Option
-	PutOrCallCall = "1" // Value '1' means Call Option
+	SecurityTypeOption = string(enum.SecurityType_OPTION)
+	SecurityTypeCommon = string(enum.SecurityType_COMMON_STOCK)
 
-	// LegCFICode Values (Tag 608)
-	LegCFICodeCall = "OC" // Option Call; used on option legs because FIX 4.4 has no LegPutOrCall tag
-	LegCFICodePut  = "OP" // Option Put; used on option legs because FIX 4.4 has no LegPutOrCall tag
+	PutOrCallPut  = string(enum.PutOrCall_PUT)
+	PutOrCallCall = string(enum.PutOrCall_CALL)
 
-	// OpenClose Values (Tag 77)
-	OpenCloseOpen  = "O" // Value 'O' means Open position
-	OpenCloseClose = "C" // Value 'C' means Close position (as per sample)
+	OpenCloseOpen  = string(enum.OpenClose_OPEN)
+	OpenCloseClose = string(enum.OpenClose_CLOSE)
 
-	// Rule80A Values (Tag 47 - Account Type)
-	Rule80AAgency    = "A" // Agency
-	Rule80APrincipal = "P" // Principal
+	Rule80AAgency = string(enum.Rule80A_AGENCY_SINGLE_ORDER)
 
-	// SettlmntTyp Values (Tag 63)
-	SettlmntTypRegular       = "0" // Regular
-	SettlmntTypCash          = "1" // Cash
-	SettlmntTypNextDay       = "2" // Next Day
-	SettlmntTypTplus2        = "3" // T+2
-	SettlmntTypTplus3        = "4" // T+3
-	SettlmntTypTplus4        = "5" // T+4
-	SettlmntTypFuture        = "6" // Future
-	SettlmntTypWhenIssued    = "7" // When Issued
-	SettlmntTypSellersOption = "8" // Sellers Option
-	SettlmntTypTplus5        = "9" // T+5
+	SettlmntTypRegular       = string(enum.SettlmntTyp_REGULAR)
+	SettlmntTypCash          = string(enum.SettlmntTyp_CASH)
+	SettlmntTypNextDay       = string(enum.SettlmntTyp_NEXT_DAY)
+	SettlmntTypTplus2        = string(enum.SettlmntTyp_T_PLUS_2)
+	SettlmntTypTplus3        = string(enum.SettlmntTyp_T_PLUS_3)
+	SettlmntTypTplus4        = string(enum.SettlmntTyp_T_PLUS_4)
+	SettlmntTypFuture        = string(enum.SettlmntTyp_FUTURE)
+	SettlmntTypWhenIssued    = string(enum.SettlmntTyp_WHEN_AND_IF_ISSUED)
+	SettlmntTypSellersOption = string(enum.SettlmntTyp_SELLERS_OPTION)
+	SettlmntTypTplus5        = string(enum.SettlmntTyp_T_PLUS_5)
 
-	// ExecInst Values (Tag 18)
-	ExecInstNotHeld = "1" // Broker is not held to immediate execution
-	ExecInstHeld    = "5" // Broker is held to immediate execution
+	ExecInstNotHeld = string(enum.ExecInst_NOT_HELD)
+	ExecInstHeld    = string(enum.ExecInst_HELD)
 
-	// ExecTransType Values (Tag 20)
-	ExecTransTypeNew     = "0" // New
-	ExecTransTypeCancel  = "1" // Cancel (Bust)
-	ExecTransTypeCorrect = "2" // Correct (Price Correct)
+	TimeInForceDay = string(enum.TimeInForce_DAY)
+	TimeInForceGTC = string(enum.TimeInForce_GOOD_TILL_CANCEL)
+	TimeInForceIOC = string(enum.TimeInForce_IMMEDIATE_OR_CANCEL)
+	TimeInForceFOK = string(enum.TimeInForce_FILL_OR_KILL)
 
-	// TradingSessionID Values (Tag 336) - RQD Specific
-	TradingSessionAM   = "1" // AM Only
-	TradingSessionPM   = "2" // PM Only
-	TradingSessionBoth = "3" // All Sessions
+	ExecTypeNew         = string(enum.ExecType_NEW)
+	ExecTypePartialFill = string(enum.ExecType_PARTIAL_FILL)
+	ExecTypeFill        = string(enum.ExecType_FILL)
+	ExecTypeCanceled    = string(enum.ExecType_CANCELED)
+	ExecTypeRejected    = string(enum.ExecType_REJECTED)
+)
 
-	// Time In Force Values (Tag 59)
-	TimeInForceDay = "0" // Active for the trading day
-	TimeInForceGTC = "1" // Good Till Cancelled
-	TimeInForceIOC = "3" // Immediate Or Cancel
-	TimeInForceFOK = "4" // Fill Or Kill
+const (
+	LegCFICodeCall = "OC" // Option call; used because FIX 4.4 has no direct LegPutOrCall field here.
+	LegCFICodePut  = "OP" // Option put; used because FIX 4.4 has no direct LegPutOrCall field here.
 
-	// Execution Types (Values for Tag 150) - What happened?
-	ExecTypeNew         = "0" // Order accepted
-	ExecTypePartialFill = "1" // Part of the order filled
-	ExecTypeFill        = "2" // Entire order filled
-	ExecTypeCanceled    = "4" // Order canceled
-	ExecTypeRejected    = "8" // Order rejected
+	TradingSessionAM   = "1" // RQD AM only
+	TradingSessionPM   = "2" // RQD PM only
+	TradingSessionBoth = "3" // RQD all sessions
 )
