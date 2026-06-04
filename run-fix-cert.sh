@@ -1,6 +1,28 @@
 #!/bin/bash
 
+START_TIME_SECONDS=$(date +%s)
 echo "Run started on $(date) for this execution."
+
+print_run_summary() {
+    local exit_code=$?
+    local end_time_seconds
+    local elapsed_seconds
+
+    end_time_seconds=$(date +%s)
+    elapsed_seconds=$((end_time_seconds - START_TIME_SECONDS))
+
+    echo "-----------------------------------------------------------------------------"
+    echo "Run ended on $(date) for this execution."
+    printf "Run duration: %02d:%02d:%02d (%d seconds)\n" \
+        $((elapsed_seconds / 3600)) \
+        $(((elapsed_seconds % 3600) / 60)) \
+        $((elapsed_seconds % 60)) \
+        "$elapsed_seconds"
+
+    return "$exit_code"
+}
+
+trap print_run_summary EXIT
 
 # -----------------------------------------------------------------------------
 # PROJECT STARTUP SCRIPT
