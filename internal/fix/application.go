@@ -177,15 +177,16 @@ type OrderParams struct {
 // OrderParams, but it has a slice of legs because one FIX message carries
 // several related instruments.
 type MultilegOrderParams struct {
-	Symbol     string // Top-level strategy symbol, usually the shared underlying symbol
-	Side       string // Top-level net side: Buy for debit orders, Sell for credit orders
-	Qty        string // Top-level strategy quantity, commonly "1" for one package
-	OrdType    string // Market or Limit for the package
-	Price      string // Net package price, such as "3.00" debit or "4.00" credit
-	TIF        string // Time in force for the package
-	TradingSes string // RQD trading session tag, when needed
-	Text       string // Human-readable label for logs and downstream OMS screens
-	Legs       []MultilegLegParams
+	Symbol       string // Top-level strategy symbol, usually the shared underlying symbol
+	SecurityType string // Top-level security type; defaults to MLEG for multi-leg orders
+	Side         string // Top-level net side: Buy for debit orders, Sell for credit orders
+	Qty          string // Top-level strategy quantity, commonly "1" for one package
+	OrdType      string // Market or Limit for the package
+	Price        string // Net package price, such as "3.00" debit or "4.00" credit
+	TIF          string // Time in force for the package
+	TradingSes   string // RQD trading session tag, when needed
+	Text         string // Human-readable label for logs and downstream OMS screens
+	Legs         []MultilegLegParams
 }
 
 // MultilegLegParams describes one leg inside a multi-leg order. Option legs use
@@ -357,6 +358,11 @@ func (a *Application) SendMultilegOrder(p MultilegOrderParams) string {
 	a.LastClOrdID = clOrdID
 
 	msg.Body.SetField(TagSymbol, quickfix.FIXString(p.Symbol))
+	if p.SecurityType != "" {
+		msg.Body.SetField(TagSecurityType, quickfix.FIXString(p.SecurityType))
+	} else {
+		msg.Body.SetField(TagSecurityType, quickfix.FIXString(SecurityTypeMultileg))
+	}
 	msg.Body.SetField(TagSide, quickfix.FIXString(p.Side))
 	msg.Body.SetField(TagTransactTime, quickfix.FIXString(time.Now().Format("20060102-15:04:05.000")))
 	msg.Body.SetField(TagOrderQty, quickfix.FIXString(p.Qty))

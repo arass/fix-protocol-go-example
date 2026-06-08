@@ -91,8 +91,9 @@ const (
 	OrdTypeMarketOnClose = string(enum.OrdType_MARKET_ON_CLOSE)
 	OrdTypeLimitOnClose  = string(enum.OrdType_LIMIT_ON_CLOSE)
 
-	SecurityTypeOption = string(enum.SecurityType_OPTION)
-	SecurityTypeCommon = string(enum.SecurityType_COMMON_STOCK)
+	SecurityTypeOption   = string(enum.SecurityType_OPTION)
+	SecurityTypeCommon   = string(enum.SecurityType_COMMON_STOCK)
+	SecurityTypeMultileg = string(enum.SecurityType_MULTILEG_INSTRUMENT)
 
 	PutOrCallPut  = string(enum.PutOrCall_PUT)
 	PutOrCallCall = string(enum.PutOrCall_CALL)
