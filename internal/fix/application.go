@@ -267,6 +267,11 @@ func (a *Application) SendOrder(p OrderParams) string {
 			msg.Body.SetField(TagOpenClose, quickfix.FIXString(p.OpenClose))
 		}
 
+	} else {
+		// This is an RQD specific thing. May need it removed for other counterparties.
+		if p.TradingSes != "" {
+			msg.Body.SetField(TagTradingSessionID, quickfix.FIXString(p.TradingSes))
+		}
 	}
 
 	msg.Body.SetField(TagSide, quickfix.FIXString(p.Side))
@@ -311,11 +316,6 @@ func (a *Application) SendOrder(p OrderParams) string {
 			roundedQty := math.Ceil(qtyFloat)
 			msg.Body.SetField(TagOrderQty, quickfix.FIXString(fmt.Sprintf("%.0f", roundedQty)))
 		}
-	}
-
-	// This is an RQD specific thing. May need it removed for other counterparties.
-	if p.TradingSes != "" {
-		msg.Body.SetField(TagTradingSessionID, quickfix.FIXString(p.TradingSes))
 	}
 
 	// Special handling for Sell Short (Side=5)
@@ -374,9 +374,10 @@ func (a *Application) SendMultilegOrder(p MultilegOrderParams) string {
 	if p.TIF != "" {
 		msg.Body.SetField(TagTimeInForce, quickfix.FIXString(p.TIF))
 	}
-	if p.TradingSes != "" {
-		msg.Body.SetField(TagTradingSessionID, quickfix.FIXString(p.TradingSes))
-	}
+	// no 336 on any Options orders (for RQD)
+	//if p.TradingSes != "" {
+	//	msg.Body.SetField(TagTradingSessionID, quickfix.FIXString(p.TradingSes))
+	//}
 	if p.Text != "" {
 		msg.Body.SetField(TagText, quickfix.FIXString(p.Text))
 	}
