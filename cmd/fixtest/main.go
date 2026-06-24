@@ -744,6 +744,48 @@ func testOptionsComplexRQD(app *fix.Application, r *bufio.Reader) {
 			},
 		},
 	})
+
+	waitNext(r, "Scenario 72: MSFT Debit Call Spread - Buy 425 Call / Sell 430 Call for 1.00 debit")
+	app.SendMultilegOrder(fix.MultilegOrderParams{
+		Symbol:     "MSFT",
+		Side:       fix.SideBuy,
+		Qty:        "1",
+		OrdType:    fix.OrdTypeLimit,
+		Price:      "1.00",
+		TIF:        fix.TimeInForceDay,
+		TradingSes: fix.TradingSessionBoth,
+		Text:       "RQD Debit Spread: BTO 1 MSFT 20260717 425C, STO 1 MSFT 20260717 430C, net debit 1.00",
+		Legs: []fix.MultilegLegParams{
+			{
+				LegRefID:           "BTO-425C",
+				Symbol:             "MSFT",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodeCall,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "425",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideBuy,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+			{
+				LegRefID:           "STO-430C",
+				Symbol:             "MSFT",
+				SecurityType:       fix.SecurityTypeOption,
+				CFICode:            fix.LegCFICodeCall,
+				MaturityMonthYear:  "202607",
+				MaturityDate:       "20260717",
+				StrikePrice:        "430",
+				ContractMultiplier: "100",
+				RatioQty:           "1",
+				Qty:                "1",
+				Side:               fix.SideSell,
+				PositionEffect:     fix.OpenCloseOpen,
+			},
+		},
+	})
 }
 
 func testMisc(app *fix.Application, r *bufio.Reader) {
