@@ -130,8 +130,9 @@ const (
 )
 
 const (
-	LegCFICodeCall = "OC" // Option call; used because FIX 4.4 has no direct LegPutOrCall field here.
-	LegCFICodePut  = "OP" // Option put; used because FIX 4.4 has no direct LegPutOrCall field here.
+	LegCFICodeCall   = "OC" // Option call; used because FIX 4.4 has no direct LegPutOrCall field here.
+	LegCFICodePut    = "OP" // Option put; used because FIX 4.4 has no direct LegPutOrCall field here.
+	LegCFICodeEquity = "ES" // Option put; used because FIX 4.4 has no direct LegPutOrCall field here.
 
 	TradingSessionAM   = "1" // RQD AM only
 	TradingSessionPM   = "2" // RQD PM only

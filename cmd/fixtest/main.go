@@ -722,6 +722,7 @@ func testOptionsComplexRQD(app *fix.Application, r *bufio.Reader) {
 				LegRefID:       "BUY-100-SH",
 				Symbol:         "EWJ",
 				SecurityType:   fix.SecurityTypeCommon,
+				CFICode:        fix.LegCFICodeEquity,
 				RatioQty:       "100",
 				Qty:            "100",
 				Side:           fix.SideBuy,
