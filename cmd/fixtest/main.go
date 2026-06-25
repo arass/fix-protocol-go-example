@@ -16,6 +16,12 @@ import (
 // testDelay is the duration to pause between sending test orders in automatic mode.
 const testDelay = 2 * time.Second
 
+// runNonOptionsScenarios controls the stock, settlement, fractional, notional,
+// extended-hours, and misc scenarios.
+//
+// Set this to false when you only want to run the options scenarios below.
+const runNonOptionsScenarios = true
+
 // Global variable for interactive mode, set via flag.
 var interactiveMode bool
 
@@ -69,19 +75,21 @@ func main() {
 	// 5. Execute Scenarios (Categorized)
 	reader := bufio.NewReader(os.Stdin)
 
-	testSides(app, reader)
-	testOrderTypes(app, reader)
-	testExecInst(app, reader)
-	testSymbology(app, reader)
-	testTIF(app, reader)
-	testSettlement(app, reader)
-	testFractional(app, reader)
-	testNotional(app, reader)
-	testExtendedHours(app, reader)
+	if runNonOptionsScenarios {
+		testSides(app, reader)
+		testOrderTypes(app, reader)
+		testExecInst(app, reader)
+		testSymbology(app, reader)
+		testTIF(app, reader)
+		testSettlement(app, reader)
+		testFractional(app, reader)
+		testNotional(app, reader)
+		testExtendedHours(app, reader)
+		testMisc(app, reader)
+	}
 	testOptions(app, reader) // New options test group
 	testOptionsRQD(app, reader)
 	testOptionsComplexRQD(app, reader)
-	testMisc(app, reader)
 
 	// 6. Keep running for a few seconds to see final responses
 	log.Println("TestRunner: All scenarios sent. Waiting for responses...")
@@ -707,16 +715,16 @@ func testOptionsComplexRQD(app *fix.Application, r *bufio.Reader) {
 		},
 	})
 
-	waitNext(r, "Scenario 71: EWJ Married Put - Buy 100 EWJ / Buy 1 92 Put for 96.00 debit")
+	waitNext(r, "Scenario 71: EWJ Married Put - Buy 100 EWJ / Buy 1 92 Put for 94.50 debit")
 	app.SendMultilegOrder(fix.MultilegOrderParams{
 		Symbol:     "EWJ",
 		Side:       fix.SideBuy,
 		Qty:        "1",
 		OrdType:    fix.OrdTypeLimit,
-		Price:      "96.00",
+		Price:      "94.50",
 		TIF:        fix.TimeInForceDay,
 		TradingSes: fix.TradingSessionBoth,
-		Text:       "RQD Married Put: Buy 100 EWJ, BTO 1 EWJ 20260717 92P, net debit 96.00",
+		Text:       "RQD Married Put: Buy 100 EWJ, BTO 1 EWJ 20260717 92P, net debit 94.50",
 		Legs: []fix.MultilegLegParams{
 			{
 				LegRefID:       "BUY-100-SH",
